@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oc-manager-v2';
+const CACHE_NAME = 'oc-manager-v3';
 const ASSETS = [
   './',
   './index.html',
