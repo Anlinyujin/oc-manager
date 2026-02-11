@@ -3,18 +3,19 @@
 let currentPage = 'home';
 let currentPageData = null;
 
-// ===== 导航 =====
 function navigateTo(page, data) {
-  // 清理之前的状态
+  // 恢复topbar（从笔记编辑页离开时）
   const topbar = document.getElementById('topbar');
   const main = document.getElementById('mainContent');
-  const rightBtn = document.getElementById('topbarRightBtn');
+  topbar.style.display = '';
+  main.style.paddingTop = '';
   topbar.classList.remove('note-edit-topbar');
   main.classList.remove('note-edit-main');
+
+  const rightBtn = document.getElementById('topbarRightBtn');
   rightBtn.classList.add('hidden');
   rightBtn.onclick = null;
 
-  // 退出导出模式
   if (page !== currentPage) {
     if (charExportMode && page !== 'charPreview') {
       charExportMode = false;
@@ -73,7 +74,6 @@ function navigateTo(page, data) {
   window.scrollTo(0, 0);
 }
 
-// ===== 返回逻辑 =====
 function goBack() {
   if (charExportMode) {
     charExportMode = false;
@@ -118,7 +118,6 @@ document.getElementById('navTags').addEventListener('click', () => { closeSideba
 document.getElementById('navBackup').addEventListener('click', () => { closeSidebar(); exportBackup(); });
 document.getElementById('navRestore').addEventListener('click', () => { closeSidebar(); document.getElementById('fileInput').click(); });
 
-// 文件导入
 document.getElementById('fileInput').addEventListener('change', async e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -136,7 +135,6 @@ document.getElementById('fileInput').addEventListener('change', async e => {
       if (!appData.notes) appData.notes = [];
       if (!appData.tags) appData.tags = { cp: [], custom: [] };
     } else {
-      // 合并
       const existingNames = appData.classes.map(c => c.name);
       (imported.classes || []).forEach(ic => {
         let name = ic.name, counter = 2;
@@ -160,7 +158,6 @@ document.getElementById('fileInput').addEventListener('change', async e => {
   e.target.value = '';
 });
 
-// ===== 导出确认按钮 =====
 document.getElementById('exportConfirmBtn').addEventListener('click', () => {
   if (currentPage === 'charList' || charExportMode) {
     if (charExportSelection.length === 0) { showToast('请至少选择一个角色'); return; }
@@ -174,7 +171,6 @@ document.getElementById('exportConfirmBtn').addEventListener('click', () => {
   }
 });
 
-// ===== 历史记录守卫 =====
 function initHistoryGuard() {
   for (let i = 0; i < 20; i++) {
     history.pushState({ guard: true, index: i }, '');
@@ -185,7 +181,6 @@ function initHistoryGuard() {
   });
 }
 
-// ===== 初始化 =====
 loadData();
 navigateTo('home');
 initHistoryGuard();
