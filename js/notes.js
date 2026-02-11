@@ -5,7 +5,12 @@ var noteExportSelection = [];
 var noteFilterTag = null;
 var noteEditPreview = false;
 
+// ... (renderNoteList 等函数保持不变，省略以节省篇幅，请保留原有的 renderNoteList 逻辑) ...
+// ... 为了确保文件完整性，这里只提供 renderNoteEdit 和相关的改动 ...
+// ... 请把下面这个 renderNoteEdit 替换掉原来的 ...
+
 function renderNoteList() {
+  // ... (保持原样，不用变) ...
   var page = document.getElementById('pageNoteList');
   var filtered = appData.notes;
   if (noteFilterTag) {
@@ -104,6 +109,9 @@ function renderNoteList() {
   }
 }
 
+// ... (handleNoteAction, updateNoteExportCount, showNoteFilterModal 保持不变) ...
+// ... 请保留原有的这些辅助函数 ...
+
 function updateNoteExportCount() {
   document.getElementById('exportConfirmBtn').textContent = '确认导出 (' + noteExportSelection.length + ')';
 }
@@ -169,7 +177,6 @@ function handleNoteAction(e) {
   }
 }
 
-// ===== 筛选弹窗 =====
 function showNoteFilterModal() {
   var tags = getAllTags();
   var overlay = document.getElementById('modalOverlay');
@@ -280,24 +287,33 @@ function showNoteFilterModal() {
   overlay.addEventListener('click', overlayHandler);
 }
 
-// ===== 笔记编辑页 =====
+// ===== 笔记编辑页 (重写) =====
 function renderNoteEdit(data) {
   var note = findNote(data.noteId);
   if (!note) { navigateTo('noteList'); return; }
 
+  // 1. 设置 Topbar
   var topbar = document.getElementById('topbar');
   var main = document.getElementById('mainContent');
-  topbar.style.display = 'none';
-  main.style.paddingTop = '0';
+  
+  // 使用全局 Topbar 结构，但自定义内容
+  topbar.style.display = 'flex';
+  topbar.innerHTML = `
+    <div class="topbar-left">
+      <button class="btn-icon" id="noteBackBtn">‹</button>
+    </div>
+    <div class="topbar-center"></div>
+    <div class="topbar-right">
+      <button class="btn-icon note-corner" id="notePreviewBtn">${noteEditPreview ? '✎' : '★'}</button>
+    </div>
+  `;
+  
+  // 移除可能存在的旧类
+  topbar.classList.remove('note-edit-topbar');
+  main.classList.remove('note-edit-main');
 
   var page = document.getElementById('pageNoteEdit');
   var h = '<div class="note-edit-page">';
-
-  h += '<div class="note-edit-topnav">';
-  h += '<button class="btn-icon note-corner" id="noteBackBtn">‹</button>';
-  h += '<button class="btn-icon note-corner" id="notePreviewBtn">' + (noteEditPreview ? '✎' : '★') + '</button>';
-  h += '</div>';
-
   h += '<div class="note-edit-body">';
 
   if (noteEditPreview) {
@@ -311,7 +327,7 @@ function renderNoteEdit(data) {
     }
     h += '<div class="note-preview-clean">' + renderMarkdown(note.content) + '</div>';
   } else {
-    h += '<input class="note-title-clean" id="noteTitleInput" value="' + escapeHtml(note.title) + '">';
+    h += '<input class="note-title-clean" id="noteTitleInput" value="' + escapeHtml(note.title) + '" placeholder="标题">';
     h += '<div class="note-tags-clean" id="noteTagsRow">';
     if (note.tags) {
       for (var et = 0; et < note.tags.length; et++) {
@@ -320,15 +336,32 @@ function renderNoteEdit(data) {
     }
     h += '<span class="note-tag-sm-add" id="addNoteTagBtn">+ 添加</span>';
     h += '</div>';
-    h += '<textarea class="note-content-clean" id="noteContentInput">' + escapeHtml(note.content) + '</textarea>';
+    h += '<textarea class="note-content-clean" id="noteContentInput" placeholder="开始写作...">' + escapeHtml(note.content) + '</textarea>';
+    
+    // MD 工具栏
+    h += '<div class="md-toolbar visible">';
+    h += '<button class="md-btn" data-md="bold">' + ICONS.bold + '</button>';
+    h += '<button class="md-btn" data-md="italic">' + ICONS.italic + '</button>';
+    h += '<button class="md-btn" data-md="strike">' + ICONS.strike + '</button>';
+    h += '<button class="md-btn" data-md="underline"><span style="text-decoration:underline;font-weight:bold">U</span></button>';
+    h += '<button class="md-btn" data-md="header"><span style="font-weight:bold">H</span></button>';
+    h += '<button class="md-btn" data-md="quote">' + ICONS.quote + '</button>';
+    h += '<button class="md-btn" data-md="list">' + ICONS.list + '</button>';
+    h += '<button class="md-btn" data-md="olist"><span style="font-weight:bold">1.</span></button>';
+    h += '<button class="md-btn" data-md="code">' + ICONS.code + '</button>';
+    h += '<button class="md-btn" data-md="link">' + ICONS.link + '</button>';
+    h += '<button class="md-btn" data-md="color">' + ICONS.color + '</button>';
+    h += '<button class="md-btn" data-md="table">' + ICONS.table + '</button>';
+    h += '<button class="md-btn" data-md="fold">' + ICONS.fold + '</button>';
+    h += '<button class="md-btn" data-md="hr">──</button>';
+    h += '</div>';
   }
 
   h += '</div></div>';
   page.innerHTML = h;
 
+  // 事件绑定
   document.getElementById('noteBackBtn').addEventListener('click', function() {
-    topbar.style.display = '';
-    main.style.paddingTop = '';
     navigateTo('noteList');
   });
 
@@ -339,19 +372,19 @@ function renderNoteEdit(data) {
 
   if (!noteEditPreview) {
     var titleInput = document.getElementById('noteTitleInput');
-    if (titleInput) {
-      titleInput.addEventListener('input', function() {
-        note.title = this.value;
-        triggerAutoSave();
-      });
-    }
     var contentInput = document.getElementById('noteContentInput');
-    if (contentInput) {
-      contentInput.addEventListener('input', function() {
-        note.content = this.value;
-        triggerAutoSave();
-      });
-    }
+    
+    titleInput.addEventListener('input', function() {
+      note.title = this.value;
+      triggerAutoSave();
+    });
+    
+    contentInput.addEventListener('input', function() {
+      note.content = this.value;
+      triggerAutoSave();
+    });
+
+    // 标签事件
     var tagRemoves = page.querySelectorAll('.note-tag-sm-remove');
     for (var tr = 0; tr < tagRemoves.length; tr++) {
       tagRemoves[tr].addEventListener('click', function() {
@@ -361,187 +394,75 @@ function renderNoteEdit(data) {
         renderNoteEdit(data);
       });
     }
-    var addTagBtn = document.getElementById('addNoteTagBtn');
-    if (addTagBtn) {
-      addTagBtn.addEventListener('click', function() {
-        showTagSelectModal(note, data);
-      });
-    }
-  }
-}
-
-function showTagSelectModal(note, editData) {
-  var tags = getAllTags();
-  var overlay = document.getElementById('modalOverlay');
-  var body = document.getElementById('modalBody');
-  var actions = document.getElementById('modalActions');
-  var activeTab = 'characters';
-
-  function render() {
-    var html = '<div class="tag-select-tabs">';
-    html += '<div class="tag-select-tab ' + (activeTab === 'characters' ? 'active' : '') + '" data-stab="characters">角色</div>';
-    html += '<div class="tag-select-tab ' + (activeTab === 'cp' ? 'active' : '') + '" data-stab="cp">CP</div>';
-    html += '<div class="tag-select-tab ' + (activeTab === 'custom' ? 'active' : '') + '" data-stab="custom">其他</div>';
-    html += '</div><div class="tag-select-body">';
-
-    if (activeTab === 'characters') {
-      for (var ci = 0; ci < appData.classes.length; ci++) {
-        var cls = appData.classes[ci];
-        if (cls.characters.length === 0) continue;
-        html += '<div class="tag-select-group">';
-        html += '<div class="tag-select-group-header"><svg class="tag-select-group-arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6,4 12,10 6,16"/></svg>' + escapeHtml(cls.name) + '</div>';
-        html += '<div class="tag-select-items">';
-        for (var chi = 0; chi < cls.characters.length; chi++) {
-          var ch = cls.characters[chi];
-          if (!ch.name) continue;
-          var sel = (note.tags && note.tags.indexOf(ch.name) >= 0) ? 'selected' : '';
-          html += '<div class="tag-select-chip ' + sel + '" data-stag="' + escapeHtml(ch.name) + '">' + escapeHtml(ch.name) + '</div>';
-        }
-        html += '</div></div>';
-      }
-    } else if (activeTab === 'cp') {
-      if (tags.cp.length === 0) {
-        html += '<div style="text-align:center; color:var(--text-secondary); padding:20px;">暂无CP标签，请在标签管理中添加</div>';
-      } else {
-        html += '<div class="tag-select-items" style="padding:4px 0;">';
-        for (var cpi = 0; cpi < tags.cp.length; cpi++) {
-          var sel2 = (note.tags && note.tags.indexOf(tags.cp[cpi]) >= 0) ? 'selected' : '';
-          html += '<div class="tag-select-chip ' + sel2 + '" data-stag="' + escapeHtml(tags.cp[cpi]) + '">' + escapeHtml(tags.cp[cpi]) + '</div>';
-        }
-        html += '</div>';
-      }
-    } else {
-      if (tags.custom.length === 0) {
-        html += '<div style="text-align:center; color:var(--text-secondary); padding:20px;">暂无自定义标签，请在标签管理中添加</div>';
-      } else {
-        html += '<div class="tag-select-items" style="padding:4px 0;">';
-        for (var cui = 0; cui < tags.custom.length; cui++) {
-          var sel3 = (note.tags && note.tags.indexOf(tags.custom[cui]) >= 0) ? 'selected' : '';
-          html += '<div class="tag-select-chip ' + sel3 + '" data-stag="' + escapeHtml(tags.custom[cui]) + '">' + escapeHtml(tags.custom[cui]) + '</div>';
-        }
-        html += '</div>';
-      }
-    }
-
-    html += '</div>';
-    body.innerHTML = html;
-    actions.innerHTML = '<button class="modal-btn primary" id="tagSelectDone">完成</button>';
-    actions.style.display = '';
-
-    var tabEls = body.querySelectorAll('[data-stab]');
-    for (var ti = 0; ti < tabEls.length; ti++) {
-      tabEls[ti].addEventListener('click', function() {
-        activeTab = this.dataset.stab;
-        render();
-      });
-    }
-
-    var chipEls = body.querySelectorAll('[data-stag]');
-    for (var ci2 = 0; ci2 < chipEls.length; ci2++) {
-      chipEls[ci2].addEventListener('click', function() {
-        var tag = this.dataset.stag;
-        if (!note.tags) note.tags = [];
-        var idx = note.tags.indexOf(tag);
-        if (idx >= 0) note.tags.splice(idx, 1);
-        else note.tags.push(tag);
-        triggerAutoSave();
-        render();
-      });
-    }
-
-    var groupHeaders = body.querySelectorAll('.tag-select-group-header');
-    for (var gi = 0; gi < groupHeaders.length; gi++) {
-      groupHeaders[gi].addEventListener('click', function() {
-        var items = this.nextElementSibling;
-        var arrow = this.querySelector('.tag-select-group-arrow');
-        if (items.style.display === 'none') {
-          items.style.display = '';
-          if (arrow) arrow.classList.remove('collapsed');
-        } else {
-          items.style.display = 'none';
-          if (arrow) arrow.classList.add('collapsed');
-        }
-      });
-    }
-
-    document.getElementById('tagSelectDone').addEventListener('click', function() {
-      overlay.classList.remove('active');
-      renderNoteEdit(editData);
+    document.getElementById('addNoteTagBtn').addEventListener('click', function() {
+      showTagSelectModal(note, data);
     });
-  }
 
-  overlay.classList.add('active');
-  render();
-}
-
-// ===== 笔记导出 =====
-function showNoteExportOptions() {
-  if (noteExportSelection.length === 0) {
-    showToast('请至少选择一条笔记');
-    return;
-  }
-
-  var notes = [];
-  for (var i = 0; i < noteExportSelection.length; i++) {
-    var n = findNote(noteExportSelection[i]);
-    if (n) notes.push(n);
-  }
-
-  var text = '';
-  for (var j = 0; j < notes.length; j++) {
-    if (j > 0) text += '\n\n---\n\n';
-    if (notes[j].title) text += '# ' + notes[j].title + '\n\n';
-    text += notes[j].content || '';
-  }
-
-  noteExportMode = false;
-  noteExportSelection = [];
-  document.getElementById('exportBottomBar').classList.remove('visible');
-
-  var page = document.getElementById('pageNoteList');
-  var h = '<div class="page-content">';
-  h += '<div class="preview-topbar"><button class="back-btn" id="noteExportBack">← 返回</button>';
-  h += '<div class="note-export-actions">';
-  h += '<button class="preview-btn" id="noteExportCopy">复制</button>';
-  h += '<button class="preview-btn" id="noteExportTxt">TXT</button>';
-  h += '<button class="preview-btn" id="noteExportImg">图片</button>';
-  h += '</div></div>';
-  h += '<textarea class="preview-textarea" id="noteExportText">' + escapeHtml(text) + '</textarea>';
-  h += '</div>';
-  page.innerHTML = h;
-
-  document.getElementById('noteExportBack').addEventListener('click', function() {
-    renderNoteList();
-  });
-
-  document.getElementById('noteExportCopy').addEventListener('click', function() {
-    var t = document.getElementById('noteExportText').value;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(t).then(function() {
-        showToast('已复制');
+    // MD工具栏事件
+    var mdBtns = page.querySelectorAll('[data-md]');
+    for (var m = 0; m < mdBtns.length; m++) {
+      mdBtns[m].addEventListener('click', function(e) {
+        e.preventDefault(); // 防止失去焦点
+        var type = this.dataset.md;
+        var ta = contentInput;
+        
+        switch(type) {
+          case 'bold': insertText(ta, '**', '**'); break;
+          case 'italic': insertText(ta, '*', '*'); break;
+          case 'strike': insertText(ta, '~~', '~~'); break;
+          case 'underline': insertText(ta, '++', '++'); break;
+          case 'quote': insertText(ta, '> ', ''); break;
+          case 'list': insertText(ta, '- ', ''); break;
+          case 'olist': insertText(ta, '1. ', ''); break;
+          case 'code': insertText(ta, '```\n', '\n```'); break;
+          case 'link': insertText(ta, '[', '](url)'); break;
+          case 'hr': insertText(ta, '\n---\n', ''); break;
+          case 'fold': insertText(ta, '>>>标题\n', '\n<<<'); break;
+          
+          case 'header':
+            showModal({
+              message: '选择标题层级',
+              buttons: [
+                {text: 'H1'}, {text: 'H2'}, {text: 'H3'}, {text: '取消'}
+              ]
+            }).then(function(r) {
+              if(r.index < 3) {
+                var hashes = '#'.repeat(r.index + 1) + ' ';
+                insertText(ta, hashes, '');
+              }
+            });
+            break;
+            
+          case 'color':
+            showColorPicker().then(function(c) {
+              if(c) insertText(ta, '{' + c + '}(', ')');
+            });
+            break;
+            
+          case 'table':
+            showTableCreator().then(function(res) {
+              if(res) {
+                var t = '\n';
+                // Header
+                t += '|';
+                for(var i=0; i<res.cols; i++) t += ' 表头 |';
+                t += '\n|';
+                for(var i=0; i<res.cols; i++) t += '---|';
+                t += '\n';
+                // Rows
+                for(var r=0; r<res.rows; r++) {
+                  t += '|';
+                  for(var c=0; c<res.cols; c++) t += ' 内容 |';
+                  t += '\n';
+                }
+                insertText(ta, t, '');
+              }
+            });
+            break;
+        }
       });
-    } else {
-      document.getElementById('noteExportText').select();
-      document.execCommand('copy');
-      showToast('已复制');
     }
-  });
-
-  document.getElementById('noteExportTxt').addEventListener('click', function() {
-    var blob = new Blob([document.getElementById('noteExportText').value], { type: 'text/plain;charset=utf-8' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = '笔记导出.txt';
-    a.click();
-    showToast('已下载');
-  });
-
-  document.getElementById('noteExportImg').addEventListener('click', function() {
-    showToast('正在生成图片...');
-    var rawText = document.getElementById('noteExportText').value;
-    var title = notes.length === 1 ? notes[0].title : '';
-    exportNoteAsImage(rawText, title).then(function() {
-      showToast('图片已保存');
-    });
-  });
+  }
 }
+
+// ... (showTagSelectModal, showNoteExportOptions 保持不变) ...
