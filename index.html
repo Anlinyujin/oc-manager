@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="OC">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+<title>OC</title>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <button class="btn-icon" id="menuBtn" aria-label="菜单">
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </button>
+  <span class="topbar-title" id="topbarTitle"></span>
+  <span class="save-indicator" id="saveIndicator">已保存</span>
+  <button class="btn-icon hidden" id="topbarRightBtn" aria-label="切换">
+    <span id="topbarRightIcon"></span>
+  </button>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header" id="sidebarHome">OC</div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-item" id="navCharCards">人设卡</div>
+    <div class="sidebar-item" id="navNotes">笔记</div>
+    <div class="sidebar-item" id="navTags">标签管理</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-item" id="navBackup">备份数据</div>
+    <div class="sidebar-footer-item" id="navRestore">恢复数据</div>
+  </div>
+</div>
+
+<div class="main" id="mainContent">
+  <div class="page page-home active" id="pageHome">
+    <span class="home-face">⩌⌯⩌</span>
+  </div>
+  <div class="page" id="pageCharList"></div>
+  <div class="page" id="pageCharEdit"></div>
+  <div class="page" id="pageCharPreview"></div>
+  <div class="page" id="pageNoteList"></div>
+  <div class="page" id="pageNoteEdit"></div>
+  <div class="page" id="pageTagManager"></div>
+</div>
+
+<div class="export-bottom-bar" id="exportBottomBar">
+  <button class="export-confirm-btn" id="exportConfirmBtn">确认导出 (0)</button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".json" style="display:none">
+
+<script src="js/ui.js"></script>
+<script src="js/data.js"></script>
+<script src="js/markdown.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/notes.js"></script>
+<script src="js/tags.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
