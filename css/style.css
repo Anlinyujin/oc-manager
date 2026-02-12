@@ -691,6 +691,10 @@ textarea.field-input.large { min-height: 120px; }
   padding-bottom: calc(60px + env(safe-area-inset-bottom));
 }
 
+.char-edit-body {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
 .note-title-clean {
   width: 100%;
   border: none;
