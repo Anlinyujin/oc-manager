@@ -1,18 +1,18 @@
 // ===== 主应用逻辑 =====
 
-let currentPage = 'home';
-let currentPageData = null;
+var currentPage = 'home';
+var currentPageData = null;
 
 function navigateTo(page, data) {
-  // 恢复topbar（从笔记编辑页离开时）
-  const topbar = document.getElementById('topbar');
-  const main = document.getElementById('mainContent');
+  // 恢复topbar（从特殊页面离开时）
+  var topbar = document.getElementById('topbar');
+  var main = document.getElementById('mainContent');
   topbar.style.display = '';
   main.style.paddingTop = '';
   topbar.classList.remove('note-edit-topbar');
   main.classList.remove('note-edit-main');
 
-  const rightBtn = document.getElementById('topbarRightBtn');
+  var rightBtn = document.getElementById('topbarRightBtn');
   rightBtn.classList.add('hidden');
   rightBtn.onclick = null;
 
@@ -29,8 +29,8 @@ function navigateTo(page, data) {
     }
   }
 
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const title = document.getElementById('topbarTitle');
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  var title = document.getElementById('topbarTitle');
   currentPage = page;
   currentPageData = data;
 
@@ -46,7 +46,10 @@ function navigateTo(page, data) {
       break;
     case 'charEdit':
       document.getElementById('pageCharEdit').classList.add('active');
-      title.textContent = '编辑'; title.classList.add('visible');
+      // 隐藏主topbar，和笔记编辑页一样
+      topbar.style.display = 'none';
+      main.style.paddingTop = '0';
+      title.textContent = ''; title.classList.remove('visible');
       renderCharEdit(data);
       break;
     case 'charPreview':
@@ -61,6 +64,9 @@ function navigateTo(page, data) {
       break;
     case 'noteEdit':
       document.getElementById('pageNoteEdit').classList.add('active');
+      // 隐藏主topbar
+      topbar.style.display = 'none';
+      main.style.paddingTop = '0';
       title.textContent = ''; title.classList.remove('visible');
       noteEditPreview = false;
       renderNoteEdit(data);
@@ -101,67 +107,67 @@ function goBack() {
 }
 
 // ===== 侧边栏 =====
-const menuBtn = document.getElementById('menuBtn');
-const sidebar = document.getElementById('sidebar');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
+var menuBtn = document.getElementById('menuBtn');
+var sidebar = document.getElementById('sidebar');
+var sidebarOverlay = document.getElementById('sidebarOverlay');
 
 function openSidebar() { sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); }
 function closeSidebar() { sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); }
 
-menuBtn.addEventListener('click', () => sidebar.classList.contains('active') ? closeSidebar() : openSidebar());
+menuBtn.addEventListener('click', function() { sidebar.classList.contains('active') ? closeSidebar() : openSidebar(); });
 sidebarOverlay.addEventListener('click', closeSidebar);
 
-document.getElementById('sidebarHome').addEventListener('click', () => { closeSidebar(); navigateTo('home'); });
-document.getElementById('navCharCards').addEventListener('click', () => { closeSidebar(); navigateTo('charList'); });
-document.getElementById('navNotes').addEventListener('click', () => { closeSidebar(); navigateTo('noteList'); });
-document.getElementById('navTags').addEventListener('click', () => { closeSidebar(); navigateTo('tagManager'); });
-document.getElementById('navBackup').addEventListener('click', () => { closeSidebar(); exportBackup(); });
-document.getElementById('navRestore').addEventListener('click', () => { closeSidebar(); document.getElementById('fileInput').click(); });
+document.getElementById('sidebarHome').addEventListener('click', function() { closeSidebar(); navigateTo('home'); });
+document.getElementById('navCharCards').addEventListener('click', function() { closeSidebar(); navigateTo('charList'); });
+document.getElementById('navNotes').addEventListener('click', function() { closeSidebar(); navigateTo('noteList'); });
+document.getElementById('navTags').addEventListener('click', function() { closeSidebar(); navigateTo('tagManager'); });
+document.getElementById('navBackup').addEventListener('click', function() { closeSidebar(); exportBackup(); });
+document.getElementById('navRestore').addEventListener('click', function() { closeSidebar(); document.getElementById('fileInput').click(); });
 
-document.getElementById('fileInput').addEventListener('change', async e => {
-  const file = e.target.files[0];
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  var file = e.target.files[0];
   if (!file) return;
-  try {
-    const imported = await importBackup(file);
-    const totalChars = imported.classes.reduce((sum, c) => sum + c.characters.length, 0);
-    const totalNotes = (imported.notes || []).length;
-    const r = await showModal({
-      message: `发现 ${imported.classes.length} 个班级，${totalChars} 个角色，${totalNotes} 条笔记。`,
+  importBackup(file).then(function(imported) {
+    var totalChars = imported.classes.reduce(function(sum, c) { return sum + c.characters.length; }, 0);
+    var totalNotes = (imported.notes || []).length;
+    return showModal({
+      message: '发现 ' + imported.classes.length + ' 个班级，' + totalChars + ' 个角色，' + totalNotes + ' 条笔记。',
       buttons: [{ text: '取消' }, { text: '合并', primary: true }, { text: '覆盖', danger: true }]
-    });
-    if (r.index === 0) return;
-    if (r.index === 2) {
-      appData = imported;
-      if (!appData.notes) appData.notes = [];
-      if (!appData.tags) appData.tags = { cp: [], custom: [] };
-    } else {
-      const existingNames = appData.classes.map(c => c.name);
-      (imported.classes || []).forEach(ic => {
-        let name = ic.name, counter = 2;
-        while (existingNames.includes(name)) { name = `${ic.name}(${counter})`; counter++; }
-        ic.name = name; existingNames.push(name);
-        if (!ic.id) ic.id = generateId();
-        ic.characters.forEach(ch => { if (!ch.id) ch.id = generateId(); });
-        appData.classes.push(ic);
-      });
-      (imported.notes || []).forEach(n => { if (!n.id) n.id = generateId(); appData.notes.push(n); });
-      if (imported.tags) {
-        (imported.tags.cp || []).forEach(t => { if (!appData.tags.cp.includes(t)) appData.tags.cp.push(t); });
-        (imported.tags.custom || []).forEach(t => { if (!appData.tags.custom.includes(t)) appData.tags.custom.push(t); });
+    }).then(function(r) {
+      if (r.index === 0) return;
+      if (r.index === 2) {
+        appData = imported;
+        if (!appData.notes) appData.notes = [];
+        if (!appData.tags) appData.tags = { cp: [], custom: [] };
+      } else {
+        var existingNames = appData.classes.map(function(c) { return c.name; });
+        (imported.classes || []).forEach(function(ic) {
+          var name = ic.name, counter = 2;
+          while (existingNames.indexOf(name) >= 0) { name = ic.name + '(' + counter + ')'; counter++; }
+          ic.name = name; existingNames.push(name);
+          if (!ic.id) ic.id = generateId();
+          ic.characters.forEach(function(ch) { if (!ch.id) ch.id = generateId(); });
+          appData.classes.push(ic);
+        });
+        (imported.notes || []).forEach(function(n) { if (!n.id) n.id = generateId(); appData.notes.push(n); });
+        if (imported.tags) {
+          (imported.tags.cp || []).forEach(function(t) { if (appData.tags.cp.indexOf(t) < 0) appData.tags.cp.push(t); });
+          (imported.tags.custom || []).forEach(function(t) { if (appData.tags.custom.indexOf(t) < 0) appData.tags.custom.push(t); });
+        }
       }
-    }
-    saveData();
-    if (currentPage === 'charList') renderCharList();
-    else if (currentPage === 'noteList') renderNoteList();
-    showToast('恢复成功');
-  } catch(err) { showToast('恢复失败：' + err); }
+      saveData();
+      if (currentPage === 'charList') renderCharList();
+      else if (currentPage === 'noteList') renderNoteList();
+      showToast('恢复成功');
+    });
+  }).catch(function(err) { showToast('恢复失败：' + err); });
   e.target.value = '';
 });
 
-document.getElementById('exportConfirmBtn').addEventListener('click', () => {
+document.getElementById('exportConfirmBtn').addEventListener('click', function() {
   if (currentPage === 'charList' || charExportMode) {
     if (charExportSelection.length === 0) { showToast('请至少选择一个角色'); return; }
-    const xml = generateExportXML(charExportSelection, appData.compactExport);
+    var xml = generateExportXML(charExportSelection, appData.compactExport);
     charExportMode = false;
     charExportSelection = [];
     document.getElementById('exportBottomBar').classList.remove('visible');
@@ -172,10 +178,10 @@ document.getElementById('exportConfirmBtn').addEventListener('click', () => {
 });
 
 function initHistoryGuard() {
-  for (let i = 0; i < 20; i++) {
+  for (var i = 0; i < 20; i++) {
     history.pushState({ guard: true, index: i }, '');
   }
-  window.addEventListener('popstate', () => {
+  window.addEventListener('popstate', function() {
     history.pushState({ guard: true }, '');
     goBack();
   });
