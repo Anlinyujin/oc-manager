@@ -43,9 +43,25 @@ function createLyricsBlock() {
   if (lyricsBlock) return;
   lyricsBlock = document.createElement('div');
   lyricsBlock.id = 'lyricsBlock';
-  lyricsBlock.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:500;pointer-events:none;border-radius:0 0 12px 12px;';
+  lyricsBlock.style.cssText = 'position:fixed;left:50%;z-index:500;pointer-events:none;border-radius:0 0 12px 12px;';
   updateLyricsBlockStyle();
+  updateLyricsPosition();
   document.body.appendChild(lyricsBlock);
+
+  // 监听视口变化，输入法弹起时修正位置
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateLyricsPosition);
+    window.visualViewport.addEventListener('scroll', updateLyricsPosition);
+  }
+}
+
+function updateLyricsPosition() {
+  if (!lyricsBlock) return;
+  if (window.visualViewport) {
+    lyricsBlock.style.top = window.visualViewport.offsetTop + 'px';
+  } else {
+    lyricsBlock.style.top = '0px';
+  }
 }
 
 function updateLyricsBlockStyle() {
@@ -63,6 +79,10 @@ function updateLyricsBlockStyle() {
 
 function removeLyricsBlock() {
   if (lyricsBlock) {
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', updateLyricsPosition);
+      window.visualViewport.removeEventListener('scroll', updateLyricsPosition);
+    }
     lyricsBlock.remove();
     lyricsBlock = null;
   }
