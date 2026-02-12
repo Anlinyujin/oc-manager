@@ -615,10 +615,7 @@ textarea.field-input.large { min-height: 120px; }
   margin-bottom: 12px;
 }
 
-.toggle-label {
-  font-size: 14px;
-  color: var(--text);
-}
+.toggle-label { font-size: 14px; color: var(--text); }
 
 .toggle-switch {
   width: 44px;
@@ -636,10 +633,8 @@ textarea.field-input.large { min-height: 120px; }
 .toggle-switch::after {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
+  top: 2px; left: 2px;
+  width: 20px; height: 20px;
   border-radius: 50%;
   background: var(--bg);
   transition: transform 0.3s;
@@ -648,10 +643,7 @@ textarea.field-input.large { min-height: 120px; }
 .toggle-switch.active::after { transform: translateX(20px); }
 
 /* ===== Notes list ===== */
-.note-item-info {
-  flex: 1;
-  min-width: 0;
-}
+.note-item-info { flex: 1; min-width: 0; }
 
 .note-item-title {
   font-size: 15px;
@@ -670,7 +662,7 @@ textarea.field-input.large { min-height: 120px; }
   white-space: nowrap;
 }
 
-/* ===== Note edit - clean style ===== */
+/* ===== Note edit ===== */
 .note-edit-page {
   min-height: 100vh;
   min-height: 100dvh;
@@ -688,9 +680,7 @@ textarea.field-input.large { min-height: 120px; }
 }
 
 .note-edit-topnav .btn-icon {
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
+  width: 32px; height: 32px; font-size: 16px;
 }
 
 .note-edit-body {
@@ -808,19 +798,14 @@ textarea.field-input.large { min-height: 120px; }
   margin: 6px 0;
   position: relative;
 }
-.note-preview-clean pre code {
-  background: none;
-  padding: 0;
-}
+.note-preview-clean pre code { background: none; padding: 0; }
 .note-preview-clean blockquote {
   border-left: 3px solid var(--border);
   padding: 4px 0 4px 12px;
   color: var(--text-secondary);
   margin: 6px 0;
 }
-.note-preview-clean blockquote blockquote {
-  margin: 4px 0;
-}
+.note-preview-clean blockquote blockquote { margin: 4px 0; }
 .note-preview-clean hr {
   border: none;
   border-top: 1px solid var(--border);
@@ -837,10 +822,7 @@ textarea.field-input.large { min-height: 120px; }
   padding: 6px 10px;
   text-align: left;
 }
-.note-preview-clean th {
-  background: var(--hover);
-  font-weight: 600;
-}
+.note-preview-clean th { background: var(--hover); font-weight: 600; }
 .note-preview-clean details {
   margin: 6px 0;
   border: 1px solid var(--border);
@@ -853,9 +835,7 @@ textarea.field-input.large { min-height: 120px; }
   font-weight: 600;
   background: var(--hover);
 }
-.note-preview-clean details > div {
-  padding: 8px 12px;
-}
+.note-preview-clean details > div { padding: 8px 12px; }
 .note-preview-clean mark {
   background: #fff3b0;
   padding: 1px 3px;
@@ -864,8 +844,7 @@ textarea.field-input.large { min-height: 120px; }
 
 .code-copy-btn {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 6px; right: 6px;
   padding: 3px 8px;
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -879,16 +858,14 @@ textarea.field-input.large { min-height: 120px; }
 /* ===== MD Toolbar ===== */
 .md-toolbar {
   position: fixed;
+  left: 0; right: 0;
   bottom: 0;
-  left: 0;
-  right: 0;
   background: var(--bg);
   border-top: 1px solid var(--border);
   z-index: 90;
   display: none;
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom);
-  transition: bottom 0.1s;
 }
 
 .md-toolbar.visible { display: flex; }
@@ -940,9 +917,10 @@ textarea.field-input.large { min-height: 120px; }
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-  z-index: 91;
+  z-index: 95;
   padding: 8px;
   display: none;
+  max-width: 280px;
 }
 
 .md-popup.visible { display: block; }
@@ -976,9 +954,7 @@ textarea.field-input.large { min-height: 120px; }
 
 .md-color-btn:active { transform: scale(0.9); }
 
-.md-popup-table {
-  padding: 8px;
-}
+.md-popup-table { padding: 8px; }
 
 .md-popup-table-label {
   font-size: 13px;
@@ -1028,9 +1004,7 @@ textarea.field-input.large { min-height: 120px; }
 .md-popup-insert:active { opacity: 0.7; }
 
 /* ===== Tag manager ===== */
-.tag-section {
-  margin-bottom: 24px;
-}
+.tag-section { margin-bottom: 24px; }
 
 .tag-section-title {
   font-size: 14px;
@@ -1041,11 +1015,7 @@ textarea.field-input.large { min-height: 120px; }
   border-bottom: 1px solid var(--border);
 }
 
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+.tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .tag-chip {
   display: inline-flex;
@@ -1057,10 +1027,7 @@ textarea.field-input.large { min-height: 120px; }
   font-size: 14px;
 }
 
-.tag-chip-auto {
-  color: var(--text-secondary);
-  font-style: italic;
-}
+.tag-chip-auto { color: var(--text-secondary); font-style: italic; }
 
 .tag-chip-delete {
   cursor: pointer;
@@ -1107,8 +1074,7 @@ textarea.field-input.large { min-height: 120px; }
 .filter-section-header:active { opacity: 0.6; }
 
 .filter-section-arrow {
-  width: 14px;
-  height: 14px;
+  width: 14px; height: 14px;
   margin-right: 6px;
   transition: transform 0.3s;
 }
@@ -1144,12 +1110,7 @@ textarea.field-input.large { min-height: 120px; }
 }
 
 /* ===== Note export ===== */
-.note-export-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
+.note-export-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .note-export-actions .preview-btn { flex: 1; min-width: 0; }
 
 /* ===== Modal ===== */
@@ -1167,10 +1128,7 @@ textarea.field-input.large { min-height: 120px; }
   transition: opacity 0.25s;
 }
 
-.modal-overlay.active {
-  opacity: 1;
-  pointer-events: auto;
-}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
 
 .modal {
   background: var(--bg);
@@ -1184,9 +1142,7 @@ textarea.field-input.large { min-height: 120px; }
 
 .modal-overlay.active .modal { transform: scale(1); }
 
-.modal-body {
-  padding: 20px 16px 16px;
-}
+.modal-body { padding: 20px 16px 16px; }
 
 .modal-body p {
   font-size: 15px;
@@ -1295,8 +1251,7 @@ textarea.field-input.large { min-height: 120px; }
 }
 
 .tag-select-group-arrow {
-  width: 12px;
-  height: 12px;
+  width: 12px; height: 12px;
   margin-right: 4px;
   transition: transform 0.3s;
 }
