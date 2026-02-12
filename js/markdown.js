@@ -1,4 +1,4 @@
-// ===== Markdown 渲染（增强版 v2） =====
+// ===== Markdown 渲染 =====
 
 function renderMarkdown(text) {
   if (!text) return '';
@@ -17,7 +17,7 @@ function renderMarkdown(text) {
         codeContent += (codeContent ? '\n' : '') + lines[i];
         i++;
       }
-      i++; // skip closing ```
+      i++;
       var codeId = 'code_' + Math.random().toString(36).substr(2, 6);
       result += '<pre id="' + codeId + '"><button class="code-copy-btn" onclick="copyCodeBlock(\'' + codeId + '\')">复制</button><code>' + escapeHtml(codeContent) + '</code></pre>\n';
       continue;
@@ -32,7 +32,7 @@ function renderMarkdown(text) {
         detailContent += (detailContent ? '\n' : '') + lines[i];
         i++;
       }
-      i++; // skip <<<
+      i++;
       result += '<details><summary>' + inlineFormat(summary) + '</summary><div>' + renderMarkdown(detailContent) + '</div></details>\n';
       continue;
     }
@@ -67,7 +67,7 @@ function renderMarkdown(text) {
       i++; continue;
     }
 
-    // 引用块（收集所有连续的引用行）
+    // 引用块
     if (line.match(/^>+\s?/)) {
       var quoteLines = [];
       while (i < lines.length && lines[i].match(/^>+\s?/)) {
@@ -78,7 +78,7 @@ function renderMarkdown(text) {
       continue;
     }
 
-    // 列表（无序和有序，支持嵌套）
+    // 列表
     if (line.match(/^(\s*)([-*+]|\d+\.)\s+/)) {
       var listLines = [];
       while (i < lines.length && (lines[i].match(/^(\s*)([-*+]|\d+\.)\s+/) || (lines[i].match(/^\s+/) && listLines.length > 0 && lines[i].trim() !== ''))) {
@@ -99,42 +99,58 @@ function renderMarkdown(text) {
 
 function inlineFormat(text) {
   if (!text) return '';
-  var s = escapeHtml(text);
-  // 行内代码（先处理，防止内部被格式化）
+
+  // 先提取行内代码，防止内部被格式化
   var codeParts = [];
-  s = s.replace(/`([^`]+)`/g, function(m, c) {
+  var s = text.replace(/`([^`]+)`/g, function(m, c) {
     var idx = codeParts.length;
-    codeParts.push('<code>' + c + '</code>');
-    return '%%CODE' + idx + '%%';
+    codeParts.push(c);
+    return '%%RAWCODE' + idx + '%%';
   });
-  // 链接和图片
-  s = s.replace(/!$$([^$$]*)\]$([^)]+)$/g, '<img src="$2" alt="$1" style="max-width:100%">');
-  s = s.replace(/$$([^$$]+)\]$([^)]+)$/g, '<a href="$2" target="_blank">$1</a>');
-  // 粗斜体
-  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>\$1</em></strong>');
-  // 粗体
-  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>\$1</strong>');
-  // 斜体
-  s = s.replace(/\*(.+?)\*/g, '<em>\$1</em>');
-  // 删除线
-  s = s.replace(/~~(.+?)~~/g, '<del>\$1</del>');
-  // 下划线
-  s = s.replace(/\+\+(.+?)\+\+/g, '<u>\$1</u>');
-  // 高亮
-  s = s.replace(/==(.+?)==/g, '<mark>\$1</mark>');
-  // 文字颜色 {color}(text)
-  s = s.replace(/\{(\w+)\}$(.+?)$/g, '<span style="color:$1">$2</span>');
-  // 还原行内代码
-  for (var i = 0; i < codeParts.length; i++) {
-    s = s.replace('%%CODE' + i + '%%', codeParts[i]);
+
+  // 提取颜色语法 {color}(text)，在 escapeHtml 之前
+  var colorParts = [];
+  s = s.replace(/\{(\w+)\}\(([^)]+)\)/g, function(m, color, txt) {
+    var idx = colorParts.length;
+    colorParts.push({ color: color, text: txt });
+    return '%%COLOR' + idx + '%%';
+  });
+
+  // 转义HTML
+  s = escapeHtml(s);
+
+  // 还原颜色占位符
+  for (var ci = 0; ci < colorParts.length; ci++) {
+    s = s.replace('%%COLOR' + ci + '%%', '<span style="color:' + colorParts[ci].color + '">' + escapeHtml(colorParts[ci].text) + '</span>');
   }
+
+  // 还原行内代码占位符
+  for (var ki = 0; ki < codeParts.length; ki++) {
+    s = s.replace('%%RAWCODE' + ki + '%%', '<code>' + escapeHtml(codeParts[ki]) + '</code>');
+  }
+
+  // 链接和图片
+  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%">');
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+  // 粗斜体
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  // 粗体
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // 斜体
+  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // 删除线
+  s = s.replace(/~~(.+?)~~/g, '<del>$1</del>');
+  // 下划线
+  s = s.replace(/\+\+(.+?)\+\+/g, '<u>$1</u>');
+  // 高亮
+  s = s.replace(/==(.+?)==/g, '<mark>$1</mark>');
+
   return s;
 }
 
 function buildBlockquote(lines) {
-  // 按引用层级分组
   var result = '';
-  var currentLevel = 0;
   var innerLines = [];
 
   for (var i = 0; i < lines.length; i++) {
@@ -145,7 +161,6 @@ function buildBlockquote(lines) {
     var content = match[2];
 
     if (level === 1) {
-      // 检查是否有更深层级
       var hasDeeper = false;
       var deeperLines = [];
       var j = i + 1;
@@ -154,7 +169,7 @@ function buildBlockquote(lines) {
         if (!dm) break;
         if (dm[1].length > 1) {
           hasDeeper = true;
-          deeperLines.push(lines[j].substring(1)); // 去掉一层 >
+          deeperLines.push(lines[j].substring(1));
           j++;
         } else {
           break;
@@ -165,7 +180,6 @@ function buildBlockquote(lines) {
         if (content.trim()) {
           innerLines.push(content);
         }
-        // 递归处理内部
         var innerQuote = buildBlockquote(deeperLines);
         var innerHtml = '';
         for (var k = 0; k < innerLines.length; k++) {
@@ -179,7 +193,6 @@ function buildBlockquote(lines) {
         i = j - 1;
       } else {
         if (content.trim() === '') {
-          // 空引用行 = 换行
           innerLines.push('');
         } else {
           innerLines.push(content);
@@ -188,7 +201,6 @@ function buildBlockquote(lines) {
     }
   }
 
-  // 处理剩余的行
   if (innerLines.length > 0) {
     var paragraphs = [];
     var currentPara = [];
@@ -217,8 +229,6 @@ function buildBlockquote(lines) {
 
 function buildNestedList(lines) {
   if (lines.length === 0) return '';
-
-  // 解析每行的缩进级别和内容
   var items = [];
   for (var i = 0; i < lines.length; i++) {
     var match = lines[i].match(/^(\s*)([-*+]|\d+\.)\s+(.*)/);
@@ -230,10 +240,8 @@ function buildNestedList(lines) {
       items.push({ indent: indent, type: type, content: content });
     }
   }
-
   if (items.length === 0) return '';
 
-  // 标准化缩进级别
   var indents = [];
   for (var j = 0; j < items.length; j++) {
     if (indents.indexOf(items[j].indent) < 0) {
@@ -261,7 +269,6 @@ function buildListFromItems(items, targetLevel, start, end) {
       while (i < end && items[i].level >= targetLevel) {
         if (items[i].level === targetLevel) {
           result += '<li>' + inlineFormat(items[i].content);
-          // 检查子级
           var childStart = i + 1;
           while (childStart < end && items[childStart].level > targetLevel) {
             childStart++;
@@ -329,7 +336,137 @@ function copyCodeBlock(id) {
   }
 }
 
+// ===== 导出图片（HTML渲染方式） =====
 function exportNoteAsImage(markdownText, title) {
+  // 创建离屏容器
+  var container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:' + (window.innerWidth) + 'px;background:#fff;padding:32px 24px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.8;';
+  
+  var html = '';
+  if (title) {
+    html += '<div style="font-size:20px;font-weight:700;margin-bottom:12px;">' + escapeHtml(title) + '</div>';
+    html += '<hr style="border:none;border-top:1px solid #e5e5e5;margin:12px 0;">';
+  }
+  html += '<div class="note-preview-clean">' + renderMarkdown(markdownText) + '</div>';
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  // 用 Canvas 手动绘制
+  return new Promise(function(resolve) {
+    // 等待渲染
+    setTimeout(function() {
+      var scale = 2;
+      var w = container.offsetWidth;
+      var h = container.offsetHeight;
+      var canvas = document.createElement('canvas');
+      canvas.width = w * scale;
+      canvas.height = h * scale;
+      var ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+
+      // 使用 SVG foreignObject 方式渲染 HTML 到 Canvas
+      var svgData = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
+        '<foreignObject width="100%" height="100%">' +
+        '<div xmlns="http://www.w3.org/1999/xhtml" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.8;padding:32px 24px;">' +
+        getStyledHtml(title, markdownText) +
+        '</div></foreignObject></svg>';
+
+      var img = new Image();
+      var svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      var url = URL.createObjectURL(svgBlob);
+
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        document.body.removeChild(container);
+
+        canvas.toBlob(function(blob) {
+          if (blob) {
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (title || '笔记') + '.png';
+            a.click();
+            URL.revokeObjectURL(a.href);
+          }
+          resolve();
+        }, 'image/png');
+      };
+
+      img.onerror = function() {
+        // SVG方式失败，回退到纯文本Canvas方式
+        URL.revokeObjectURL(url);
+        document.body.removeChild(container);
+        exportNoteAsImageFallback(markdownText, title).then(resolve);
+      };
+
+      img.src = url;
+    }, 100);
+  });
+}
+
+function getStyledHtml(title, markdownText) {
+  var html = '';
+  if (title) {
+    html += '<div style="font-size:20px;font-weight:700;margin-bottom:12px;">' + escapeHtml(title) + '</div>';
+    html += '<hr style="border:none;border-top:1px solid #e5e5e5;margin:12px 0;">';
+  }
+
+  // 内联所有样式的 markdown 渲染
+  var rendered = renderMarkdown(markdownText);
+
+  // 替换标签添加内联样式
+  rendered = rendered.replace(/<h1>/g, '<div style="font-size:20px;font-weight:700;margin:14px 0 6px;">');
+  rendered = rendered.replace(/<\/h1>/g, '</div>');
+  rendered = rendered.replace(/<h2>/g, '<div style="font-size:17px;font-weight:700;margin:12px 0 5px;">');
+  rendered = rendered.replace(/<\/h2>/g, '</div>');
+  rendered = rendered.replace(/<h3>/g, '<div style="font-size:15px;font-weight:700;margin:10px 0 4px;">');
+  rendered = rendered.replace(/<\/h3>/g, '</div>');
+  rendered = rendered.replace(/<h4>/g, '<div style="font-size:14px;font-weight:700;margin:8px 0 3px;">');
+  rendered = rendered.replace(/<\/h4>/g, '</div>');
+  rendered = rendered.replace(/<p>/g, '<div style="margin:6px 0;">');
+  rendered = rendered.replace(/<\/p>/g, '</div>');
+  rendered = rendered.replace(/<strong>/g, '<span style="font-weight:700;">');
+  rendered = rendered.replace(/<\/strong>/g, '</span>');
+  rendered = rendered.replace(/<em>/g, '<span style="font-style:italic;">');
+  rendered = rendered.replace(/<\/em>/g, '</span>');
+  rendered = rendered.replace(/<del>/g, '<span style="text-decoration:line-through;color:#888;">');
+  rendered = rendered.replace(/<\/del>/g, '</span>');
+  rendered = rendered.replace(/<u>/g, '<span style="text-decoration:underline;">');
+  rendered = rendered.replace(/<\/u>/g, '</span>');
+  rendered = rendered.replace(/<mark>/g, '<span style="background:#fff3b0;padding:1px 3px;">');
+  rendered = rendered.replace(/<\/mark>/g, '</span>');
+  rendered = rendered.replace(/<code>/g, '<span style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-size:13px;font-family:monospace;">');
+  rendered = rendered.replace(/<\/code>/g, '</span>');
+  rendered = rendered.replace(/<pre[^>]*>/g, '<div style="background:#f5f5f5;padding:10px;border-radius:6px;margin:6px 0;font-family:monospace;font-size:13px;white-space:pre-wrap;">');
+  rendered = rendered.replace(/<\/pre>/g, '</div>');
+  rendered = rendered.replace(/<blockquote>/g, '<div style="border-left:3px solid #e5e5e5;padding:4px 0 4px 12px;color:#888;margin:6px 0;">');
+  rendered = rendered.replace(/<\/blockquote>/g, '</div>');
+  rendered = rendered.replace(/<hr>/g, '<hr style="border:none;border-top:1px solid #e5e5e5;margin:14px 0;">');
+  rendered = rendered.replace(/<table>/g, '<table style="border-collapse:collapse;width:100%;margin:6px 0;font-size:13px;">');
+  rendered = rendered.replace(/<th>/g, '<th style="border:1px solid #e5e5e5;padding:6px 10px;background:#f5f5f5;font-weight:600;text-align:left;">');
+  rendered = rendered.replace(/<td>/g, '<td style="border:1px solid #e5e5e5;padding:6px 10px;text-align:left;">');
+  rendered = rendered.replace(/<details>/g, '<div style="border:1px solid #e5e5e5;border-radius:6px;margin:6px 0;overflow:hidden;">');
+  rendered = rendered.replace(/<\/details>/g, '</div>');
+  rendered = rendered.replace(/<summary>/g, '<div style="padding:8px 12px;font-weight:600;background:#f5f5f5;">▶ ');
+  rendered = rendered.replace(/<\/summary>/g, '</div>');
+  rendered = rendered.replace(/<ul>/g, '<div style="padding-left:20px;margin:6px 0;">');
+  rendered = rendered.replace(/<\/ul>/g, '</div>');
+  rendered = rendered.replace(/<ol>/g, '<div style="padding-left:20px;margin:6px 0;">');
+  rendered = rendered.replace(/<\/ol>/g, '</div>');
+  rendered = rendered.replace(/<li>/g, '<div style="margin:3px 0;">• ');
+  rendered = rendered.replace(/<\/li>/g, '</div>');
+
+  // 移除复制按钮
+  rendered = rendered.replace(/<button[^>]*class="code-copy-btn"[^>]*>[^<]*<\/button>/g, '');
+
+  html += rendered;
+  return html;
+}
+
+// 纯文本回退方案
+function exportNoteAsImageFallback(markdownText, title) {
   var canvas = document.createElement('canvas');
   var ctx = canvas.getContext('2d');
   var width = window.innerWidth * 2;
@@ -354,17 +491,17 @@ function exportNoteAsImage(markdownText, title) {
 
   var plainText = markdownText
     .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\*\*\*(.+?)\*\*\*/g, '\$1')
-    .replace(/\*\*(.+?)\*\*/g, '\$1')
-    .replace(/\*(.+?)\*/g, '\$1')
-    .replace(/~~(.+?)~~/g, '\$1')
-    .replace(/\+\+(.+?)\+\+/g, '\$1')
-    .replace(/==(.+?)==/g, '\$1')
-    .replace(/\{(\w+)\}$(.+?)$/g, '\$2')
-    .replace(/`([^`]+)`/g, '\$1')
+    .replace(/\*\*\*(.+?)\*\*\*/g, '$1')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/\+\+(.+?)\+\+/g, '$1')
+    .replace(/==(.+?)==/g, '$1')
+    .replace(/\{(\w+)\}\(([^)]+)\)/g, '$2')
+    .replace(/`([^`]+)`/g, '$1')
     .replace(/^>\s?/gm, '| ')
     .replace(/^[-*+]\s+/gm, '• ')
-    .replace(/^(\d+)\.\s+/gm, '\$1. ')
+    .replace(/^(\d+)\.\s+/gm, '$1. ')
     .replace(/^---$/gm, '────────────────');
 
   ctx.font = fontSize + 'px -apple-system, sans-serif';
