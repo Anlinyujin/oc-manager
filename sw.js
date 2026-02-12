@@ -1,5 +1,5 @@
-const CACHE_NAME = 'oc-manager-v3'; // <--- 这里改了，强制刷新缓存
-const ASSETS = [
+var CACHE_NAME = 'oc-manager-v5';
+var ASSETS = [
   './',
   './index.html',
   './manifest.json',
@@ -15,36 +15,41 @@ const ASSETS = [
   './js/app.js'
 ];
 
-self.addEventListener('install', event => {
-  self.skipWaiting(); // <--- 强制立即接管
+self.addEventListener('install', function(event) {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(function(cache) {
+      return cache.addAll(ASSETS);
+    })
   );
 });
 
-self.addEventListener('activate', event => {
+self.addEventListener('activate', function(event) {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
+    caches.keys().then(function(keys) {
+      return Promise.all(
+        keys.filter(function(k) { return k !== CACHE_NAME; })
+            .map(function(k) { return caches.delete(k); })
+      );
+    })
   );
-  self.clients.claim(); // <--- 立即控制页面
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', event => {
-  // 策略改为：网络优先，失败才走缓存（方便开发调试）
+self.addEventListener('fetch', function(event) {
   event.respondWith(
     fetch(event.request)
-      .then(response => {
-        // 只有请求成功才更新缓存
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
+      .then(function(response) {
+        if (response && response.status === 200) {
+          var responseClone = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
             cache.put(event.request, responseClone);
           });
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(function() {
+        return caches.match(event.request);
+      })
   );
 });
