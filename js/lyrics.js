@@ -43,25 +43,33 @@ function createLyricsBlock() {
   if (lyricsBlock) return;
   lyricsBlock = document.createElement('div');
   lyricsBlock.id = 'lyricsBlock';
-  lyricsBlock.style.cssText = 'position:fixed;left:50%;z-index:500;pointer-events:none;border-radius:0 0 12px 12px;';
+  // 注意：这里去掉了 transform，改用 updateLyricsPosition 统一控制位置
+  lyricsBlock.style.cssText = 'position:fixed;top:0;left:50%;z-index:500;pointer-events:none;border-radius:0 0 12px 12px;will-change:transform;';
+  
   updateLyricsBlockStyle();
-  updateLyricsPosition();
   document.body.appendChild(lyricsBlock);
 
-  // 监听视口变化，输入法弹起时修正位置
+  // 监听 Visual Viewport 变化（解决键盘顶起问题）
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateLyricsPosition);
     window.visualViewport.addEventListener('scroll', updateLyricsPosition);
   }
+  window.addEventListener('scroll', updateLyricsPosition);
+  updateLyricsPosition();
 }
 
+// 核心修复：根据可视区域的偏移量，实时调整位置
 function updateLyricsPosition() {
   if (!lyricsBlock) return;
+  
+  var offsetY = 0;
   if (window.visualViewport) {
-    lyricsBlock.style.top = window.visualViewport.offsetTop + 'px';
-  } else {
-    lyricsBlock.style.top = '0px';
+    offsetY = window.visualViewport.offsetTop;
   }
+  
+  // 使用 transform 同时处理水平居中(-50%)和垂直偏移(offsetY)
+  // 这样比直接改 top 性能更好，且不会和键盘动画冲突
+  lyricsBlock.style.transform = 'translate(-50%, ' + offsetY + 'px)';
 }
 
 function updateLyricsBlockStyle() {
@@ -69,7 +77,6 @@ function updateLyricsBlockStyle() {
   lyricsBlock.style.width = lyricsConfig.width + 'vw';
   lyricsBlock.style.height = lyricsConfig.height + 'px';
   lyricsBlock.style.background = lyricsConfig.color;
-  // 加个微妙的阴影让白色块也能看到边界
   if (lyricsConfig.color === '#ffffff' || lyricsConfig.color === '#fff') {
     lyricsBlock.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
   } else {
@@ -79,21 +86,21 @@ function updateLyricsBlockStyle() {
 
 function removeLyricsBlock() {
   if (lyricsBlock) {
+    // 移除监听器
     if (window.visualViewport) {
       window.visualViewport.removeEventListener('resize', updateLyricsPosition);
       window.visualViewport.removeEventListener('scroll', updateLyricsPosition);
     }
+    window.removeEventListener('scroll', updateLyricsPosition);
+    
     lyricsBlock.remove();
     lyricsBlock = null;
   }
 }
 
 function openLyricsPanel() {
-  // 如果已固定，点击♪就打开调整面板（先取消固定）
-  // 创建色块（如果没有）
   createLyricsBlock();
 
-  // 创建调整面板
   var existing = document.getElementById('lyricsPanel');
   if (existing) existing.remove();
 
@@ -102,37 +109,27 @@ function openLyricsPanel() {
   panel.className = 'lyrics-panel';
 
   var h = '';
-
-  // 高度滑块
   h += '<div class="lyrics-slider-row">';
   h += '<span class="lyrics-slider-label">高度</span>';
   h += '<input type="range" class="lyrics-slider" id="lyricsHeightSlider" min="20" max="200" value="' + lyricsConfig.height + '">';
   h += '<span class="lyrics-slider-value" id="lyricsHeightValue">' + lyricsConfig.height + '</span>';
   h += '</div>';
 
-  // 宽度滑块
   h += '<div class="lyrics-slider-row">';
   h += '<span class="lyrics-slider-label">宽度</span>';
   h += '<input type="range" class="lyrics-slider" id="lyricsWidthSlider" min="30" max="100" value="' + lyricsConfig.width + '">';
   h += '<span class="lyrics-slider-value" id="lyricsWidthValue">' + lyricsConfig.width + '</span>';
   h += '</div>';
 
-  // 颜色选择
   h += '<div class="lyrics-colors">';
   for (var i = 0; i < lyricsColors.length; i++) {
     var c = lyricsColors[i];
     var selected = (c.color === lyricsConfig.color) ? ' lyrics-color-selected' : '';
-    var borderStyle = '';
-    if (c.color === '#ffffff' || c.color === '#fff') {
-      borderStyle = 'border:2px solid #d4d4d4;';
-    } else {
-      borderStyle = 'border:2px solid transparent;';
-    }
+    var borderStyle = (c.color === '#ffffff' || c.color === '#fff') ? 'border:2px solid #d4d4d4;' : 'border:2px solid transparent;';
     h += '<div class="lyrics-color-btn' + selected + '" data-color="' + c.color + '" style="background:' + c.color + ';' + borderStyle + '"></div>';
   }
   h += '</div>';
 
-  // 钉子按钮和关闭
   h += '<div class="lyrics-actions">';
   h += '<button class="lyrics-action-btn" id="lyricsPinBtn">📌 固定</button>';
   h += '<button class="lyrics-action-btn lyrics-close-btn" id="lyricsCloseBtn">关闭</button>';
@@ -159,13 +156,11 @@ function openLyricsPanel() {
     updateLyricsBlockStyle();
   });
 
-  // 颜色按钮
   var colorBtns = panel.querySelectorAll('.lyrics-color-btn');
   for (var j = 0; j < colorBtns.length; j++) {
     colorBtns[j].addEventListener('click', function() {
       lyricsConfig.color = this.getAttribute('data-color');
       updateLyricsBlockStyle();
-      // 更新选中状态
       var all = panel.querySelectorAll('.lyrics-color-btn');
       for (var k = 0; k < all.length; k++) {
         all[k].classList.remove('lyrics-color-selected');
@@ -174,7 +169,6 @@ function openLyricsPanel() {
     });
   }
 
-  // 固定按钮
   document.getElementById('lyricsPinBtn').addEventListener('click', function() {
     lyricsConfig.pinned = true;
     saveLyricsConfig();
@@ -182,7 +176,6 @@ function openLyricsPanel() {
     showToast('已固定');
   });
 
-  // 关闭按钮
   document.getElementById('lyricsCloseBtn').addEventListener('click', function() {
     lyricsConfig.pinned = false;
     saveLyricsConfig();
@@ -196,7 +189,6 @@ function closeLyricsPanel() {
   if (panel) panel.remove();
 }
 
-// 初始化：如果之前固定了，自动显示色块
 function initLyrics() {
   loadLyricsConfig();
   if (lyricsConfig.pinned) {
@@ -204,15 +196,12 @@ function initLyrics() {
   }
 }
 
-// 侧边栏♪点击
 function onLyricsClick() {
   if (lyricsConfig.pinned) {
-    // 已固定状态：取消固定，打开调整面板
     lyricsConfig.pinned = false;
     saveLyricsConfig();
     openLyricsPanel();
   } else {
-    // 未固定：打开调整面板
     openLyricsPanel();
   }
 }
