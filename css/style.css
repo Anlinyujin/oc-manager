@@ -1291,3 +1291,106 @@ textarea.field-input.large { min-height: 120px; }
   .note-edit-body { max-width: 700px; margin: 0 auto; }
 }
 
+/* ===== Lyrics placeholder ===== */
+.lyrics-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  z-index: 501;
+  padding: 20px 20px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+
+.lyrics-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.lyrics-slider-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 28px;
+  flex-shrink: 0;
+}
+
+.lyrics-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+
+.lyrics-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+}
+
+.lyrics-slider-value {
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lyrics-colors {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.lyrics-color-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.lyrics-color-btn:active { transform: scale(0.9); }
+
+.lyrics-color-btn.lyrics-color-selected {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.lyrics-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.lyrics-action-btn {
+  flex: 1;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s;
+}
+
+.lyrics-action-btn:active { background: var(--hover); }
+
+.lyrics-close-btn {
+  color: var(--text-secondary);
+}
