@@ -563,3 +563,228 @@ function wrapText(ctx, text, maxWidth) {
   if (current) lines.push(current);
   return lines.length > 0 ? lines : [''];
 }
+
+// ===== 预览页保存为图片 =====
+function savePreviewAsImage(previewEl, title) {
+  // 用 Canvas 2D 逐行绘制方式（兼容性最好）
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  var scale = 2;
+  var width = Math.min(window.innerWidth, 420);
+  var padding = 24;
+  var maxTextWidth = width - padding * 2;
+  var fontSize = 14;
+  var lineHeight = Math.floor(fontSize * 1.8);
+
+  // 获取预览区域的纯文本，保留结构
+  var el = previewEl.cloneNode(true);
+  // 移除复制按钮
+  var copyBtns = el.querySelectorAll('.code-copy-btn');
+  for (var cb = 0; cb < copyBtns.length; cb++) {
+    copyBtns[cb].parentNode.removeChild(copyBtns[cb]);
+  }
+
+  // 提取带格式信息的行
+  var lines = [];
+
+  function extractLines(node, depth) {
+    if (node.nodeType === 3) {
+      // 文本节点
+      var text = node.textContent;
+      if (text.trim()) {
+        var textLines = text.split('\n');
+        for (var tl = 0; tl < textLines.length; tl++) {
+          if (textLines[tl].trim()) {
+            lines.push({ text: textLines[tl].trim(), size: fontSize, bold: false, color: '#1a1a1a', indent: depth });
+          }
+        }
+      }
+      return;
+    }
+    if (node.nodeType !== 1) return;
+
+    var tag = node.tagName.toLowerCase();
+    var style = node.getAttribute('style') || '';
+
+    if (tag === 'h1') {
+      lines.push({ text: node.textContent, size: 20, bold: true, color: '#1a1a1a', indent: 0 });
+      lines.push({ text: '', size: 6, bold: false, color: '#1a1a1a', indent: 0 });
+      return;
+    }
+    if (tag === 'h2') {
+      lines.push({ text: node.textContent, size: 17, bold: true, color: '#1a1a1a', indent: 0 });
+      lines.push({ text: '', size: 6, bold: false, color: '#1a1a1a', indent: 0 });
+      return;
+    }
+    if (tag === 'h3') {
+      lines.push({ text: node.textContent, size: 15, bold: true, color: '#1a1a1a', indent: 0 });
+      return;
+    }
+    if (tag === 'h4' || tag === 'h5' || tag === 'h6') {
+      lines.push({ text: node.textContent, size: 14, bold: true, color: '#1a1a1a', indent: 0 });
+      return;
+    }
+    if (tag === 'hr') {
+      lines.push({ text: '────────────────────', size: fontSize, bold: false, color: '#ccc', indent: 0 });
+      return;
+    }
+    if (tag === 'li') {
+      var prefix = depth > 1 ? '  · ' : '• ';
+      var parent = node.parentNode;
+      if (parent && parent.tagName.toLowerCase() === 'ol') {
+        var idx = 1;
+        var prev = node.previousElementSibling;
+        while (prev) { idx++; prev = prev.previousElementSibling; }
+        prefix = idx + '. ';
+      }
+      // 获取直接文本内容（不含子列表）
+      var directText = '';
+      for (var c = 0; c < node.childNodes.length; c++) {
+        if (node.childNodes[c].nodeType === 3) {
+          directText += node.childNodes[c].textContent;
+        } else if (node.childNodes[c].nodeType === 1) {
+          var childTag = node.childNodes[c].tagName.toLowerCase();
+          if (childTag !== 'ul' && childTag !== 'ol') {
+            directText += node.childNodes[c].textContent;
+          }
+        }
+      }
+      lines.push({ text: prefix + directText.trim(), size: fontSize, bold: false, color: '#1a1a1a', indent: depth });
+      // 处理子列表
+      for (var sc = 0; sc < node.childNodes.length; sc++) {
+        if (node.childNodes[sc].nodeType === 1) {
+          var scTag = node.childNodes[sc].tagName.toLowerCase();
+          if (scTag === 'ul' || scTag === 'ol') {
+            extractLines(node.childNodes[sc], depth + 1);
+          }
+        }
+      }
+      return;
+    }
+    if (tag === 'blockquote') {
+      lines.push({ text: '│ ' + node.textContent.trim(), size: fontSize, bold: false, color: '#888', indent: depth });
+      return;
+    }
+    if (tag === 'pre' || tag === 'code') {
+      var codeText = node.textContent.trim().split('\n');
+      for (var cl = 0; cl < codeText.length; cl++) {
+        lines.push({ text: '  ' + codeText[cl], size: 13, bold: false, color: '#555', indent: depth, bg: '#f5f5f5' });
+      }
+      return;
+    }
+    if (tag === 'table') {
+      var rows = node.querySelectorAll('tr');
+      for (var ri = 0; ri < rows.length; ri++) {
+        var cells = rows[ri].querySelectorAll('th, td');
+        var rowText = '| ';
+        for (var ci = 0; ci < cells.length; ci++) {
+          rowText += cells[ci].textContent.trim() + ' | ';
+        }
+        lines.push({ text: rowText, size: 13, bold: ri === 0, color: '#1a1a1a', indent: depth });
+      }
+      return;
+    }
+    if (tag === 'details') {
+      var summary = node.querySelector('summary');
+      if (summary) {
+        lines.push({ text: '▶ ' + summary.textContent.trim(), size: fontSize, bold: true, color: '#1a1a1a', indent: depth });
+      }
+      return;
+    }
+
+    // 默认：递归子节点
+    for (var i = 0; i < node.childNodes.length; i++) {
+      extractLines(node.childNodes[i], depth);
+    }
+
+    // 块级元素后加空行
+    if (tag === 'p' || tag === 'div' || tag === 'details') {
+      lines.push({ text: '', size: 4, bold: false, color: '#1a1a1a', indent: 0 });
+    }
+  }
+
+  // 标题
+  if (title) {
+    lines.push({ text: title, size: 20, bold: true, color: '#1a1a1a', indent: 0 });
+    lines.push({ text: '────────────────────', size: fontSize, bold: false, color: '#e5e5e5', indent: 0 });
+    lines.push({ text: '', size: 8, bold: false, color: '#1a1a1a', indent: 0 });
+  }
+
+  extractLines(el, 0);
+
+  // 计算每行需要的高度并自动换行
+  var drawLines = [];
+  ctx.font = fontSize + 'px -apple-system, sans-serif';
+
+  for (var di = 0; di < lines.length; di++) {
+    var item = lines[di];
+    if (!item.text) {
+      drawLines.push(item);
+      continue;
+    }
+    ctx.font = (item.bold ? 'bold ' : '') + item.size + 'px -apple-system, sans-serif';
+    var indentPx = (item.indent || 0) * 16;
+    var availWidth = (maxTextWidth - indentPx) * scale;
+    var wrapped = wrapText(ctx, item.text, availWidth);
+    for (var wi = 0; wi < wrapped.length; wi++) {
+      drawLines.push({
+        text: wrapped[wi],
+        size: item.size,
+        bold: item.bold,
+        color: item.color,
+        indent: item.indent,
+        bg: item.bg
+      });
+    }
+  }
+
+  // 绘制
+  var totalHeight = padding * 2;
+  for (var hi = 0; hi < drawLines.length; hi++) {
+    totalHeight += Math.floor((drawLines[hi].size || fontSize) * 1.8);
+  }
+
+  canvas.width = width * scale;
+  canvas.height = Math.max(totalHeight * scale, 200);
+
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, totalHeight);
+
+  var y = padding;
+  for (var li = 0; li < drawLines.length; li++) {
+    var line = drawLines[li];
+    var lh = Math.floor((line.size || fontSize) * 1.8);
+    var x = padding + (line.indent || 0) * 16;
+
+    if (line.bg) {
+      ctx.fillStyle = line.bg;
+      ctx.fillRect(padding, y, maxTextWidth, lh);
+    }
+
+    ctx.fillStyle = line.color || '#1a1a1a';
+    ctx.font = (line.bold ? 'bold ' : '') + (line.size || fontSize) + 'px -apple-system, BlinkMacSystemFont, sans-serif';
+    if (line.text) {
+      ctx.fillText(line.text, x, y + (line.size || fontSize));
+    }
+    y += lh;
+  }
+
+  // 裁剪到实际高度
+  var finalCanvas = document.createElement('canvas');
+  finalCanvas.width = canvas.width;
+  finalCanvas.height = y * scale;
+  var fctx = finalCanvas.getContext('2d');
+  fctx.drawImage(canvas, 0, 0);
+
+  finalCanvas.toBlob(function(blob) {
+    if (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (title || '笔记') + '.png';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('图片已保存');
+    }
+  }, 'image/png');
+}
