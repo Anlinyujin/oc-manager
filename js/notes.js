@@ -100,7 +100,6 @@ function renderNoteList() {
     if (filtBtn) filtBtn.addEventListener('click', showNoteFilterModal);
   }
 
-  // 隐藏工具栏
   hideMdToolbar();
 }
 
@@ -349,12 +348,9 @@ function renderNoteEdit(data) {
         showTagSelectModal(note, data);
       });
     }
-
-    // 初始化工具栏
     initMdToolbar();
   } else {
     hideMdToolbar();
-    // 绑定代码块复制按钮（已通过onclick内联处理）
   }
 }
 
@@ -371,24 +367,24 @@ function initMdToolbar() {
   scroll.className = 'md-toolbar-scroll';
 
   var tools = [
-    { label: 'B', title: '粗体', action: 'bold' },
-    { label: 'I', title: '斜体', action: 'italic' },
-    { label: 'S', title: '删除线', action: 'strike' },
-    { label: 'U', title: '下划线', action: 'underline' },
-    { label: '==', title: '高亮', action: 'highlight' },
+    { label: 'B', action: 'bold' },
+    { label: 'I', action: 'italic' },
+    { label: 'S', action: 'strike' },
+    { label: 'U', action: 'underline' },
+    { label: '==', action: 'highlight' },
     { type: 'sep' },
-    { label: 'H', title: '标题', action: 'heading' },
-    { label: '"', title: '引用', action: 'quote' },
-    { label: '•', title: '无序列表', action: 'ul' },
-    { label: '1.', title: '有序列表', action: 'ol' },
+    { label: 'H', action: 'heading' },
+    { label: '"', action: 'quote' },
+    { label: '•', action: 'ul' },
+    { label: '1.', action: 'ol' },
     { type: 'sep' },
-    { label: '<>', title: '代码', action: 'code' },
-    { label: '🔗', title: '链接', action: 'link' },
-    { label: '──', title: '分割线', action: 'hr' },
+    { label: '<>', action: 'code' },
+    { label: '🔗', action: 'link' },
+    { label: '──', action: 'hr' },
     { type: 'sep' },
-    { label: '🎨', title: '颜色', action: 'color' },
-    { label: '📦', title: '折叠', action: 'details' },
-    { label: '📊', title: '表格', action: 'table' }
+    { label: '🎨', action: 'color' },
+    { label: '📦', action: 'details' },
+    { label: '📊', action: 'table' }
   ];
 
   for (var i = 0; i < tools.length; i++) {
@@ -401,7 +397,6 @@ function initMdToolbar() {
       var btn = document.createElement('button');
       btn.className = 'md-tool-btn';
       btn.textContent = tool.label;
-      btn.title = tool.title;
       btn.dataset.mdAction = tool.action;
       btn.addEventListener('click', handleMdToolAction);
       scroll.appendChild(btn);
@@ -411,7 +406,6 @@ function initMdToolbar() {
   toolbar.appendChild(scroll);
   document.body.appendChild(toolbar);
 
-  // 创建弹出面板
   if (!document.getElementById('mdPopup')) {
     var popup = document.createElement('div');
     popup.id = 'mdPopup';
@@ -422,7 +416,6 @@ function initMdToolbar() {
     mdPopupEl = document.getElementById('mdPopup');
   }
 
-  // 监听键盘弹出
   setupKeyboardListener();
 }
 
@@ -440,25 +433,30 @@ function hideMdToolbar() {
 }
 
 function setupKeyboardListener() {
-  if (window.visualViewport) {
+  if (!window.visualViewport) return;
+
+  var update = function() {
     var toolbar = document.getElementById('mdToolbar');
-    var onResize = function() {
-      if (!toolbar || !mdToolbarVisible) return;
-      var vv = window.visualViewport;
-      var keyboardHeight = window.innerHeight - vv.height;
-      if (keyboardHeight > 100) {
-        // 键盘弹起
-        toolbar.style.bottom = keyboardHeight + 'px';
-        toolbar.style.paddingBottom = '0';
-      } else {
-        // 键盘收起
-        toolbar.style.bottom = '0';
-        toolbar.style.paddingBottom = 'env(safe-area-inset-bottom)';
-      }
-    };
-    window.visualViewport.addEventListener('resize', onResize);
-    window.visualViewport.addEventListener('scroll', onResize);
-  }
+    if (!toolbar || !mdToolbarVisible) return;
+
+    var vv = window.visualViewport;
+    var offsetTop = vv.offsetTop + vv.height;
+    var totalHeight = document.documentElement.clientHeight;
+    var bottomOffset = totalHeight - offsetTop;
+
+    if (bottomOffset > 50) {
+      toolbar.style.position = 'fixed';
+      toolbar.style.bottom = bottomOffset + 'px';
+      toolbar.style.paddingBottom = '0';
+    } else {
+      toolbar.style.position = 'fixed';
+      toolbar.style.bottom = '0';
+      toolbar.style.paddingBottom = 'env(safe-area-inset-bottom)';
+    }
+  };
+
+  window.visualViewport.addEventListener('resize', update);
+  window.visualViewport.addEventListener('scroll', update);
 }
 
 function handleMdToolAction(e) {
@@ -476,24 +474,15 @@ function handleMdToolAction(e) {
   var after = ta.value.substring(end);
 
   switch (action) {
-    case 'bold':
-      insertWrap(ta, '**', '**', '粗体文字'); break;
-    case 'italic':
-      insertWrap(ta, '*', '*', '斜体文字'); break;
-    case 'strike':
-      insertWrap(ta, '~~', '~~', '删除线文字'); break;
-    case 'underline':
-      insertWrap(ta, '++', '++', '下划线文字'); break;
-    case 'highlight':
-      insertWrap(ta, '==', '==', '高亮文字'); break;
-    case 'quote':
-      insertLinePrefix(ta, '> '); break;
-    case 'ul':
-      insertLinePrefix(ta, '- '); break;
-    case 'ol':
-      insertLinePrefix(ta, '1. '); break;
-    case 'hr':
-      insertAtCursor(ta, '\n---\n'); break;
+    case 'bold': insertWrap(ta, '**', '**', '粗体文字'); break;
+    case 'italic': insertWrap(ta, '*', '*', '斜体文字'); break;
+    case 'strike': insertWrap(ta, '~~', '~~', '删除线文字'); break;
+    case 'underline': insertWrap(ta, '++', '++', '下划线文字'); break;
+    case 'highlight': insertWrap(ta, '==', '==', '高亮文字'); break;
+    case 'quote': insertLinePrefix(ta, '> '); break;
+    case 'ul': insertLinePrefix(ta, '- '); break;
+    case 'ol': insertLinePrefix(ta, '1. '); break;
+    case 'hr': insertAtCursor(ta, '\n---\n'); break;
     case 'link':
       if (selected) {
         ta.value = before + '[' + selected + '](url)' + after;
@@ -505,16 +494,11 @@ function handleMdToolAction(e) {
         ta.selectionEnd = before.length + 5;
       }
       break;
-    case 'code':
-      showCodePopup(this); return;
-    case 'heading':
-      showHeadingPopup(this); return;
-    case 'color':
-      showColorPopup(this); return;
-    case 'details':
-      insertAtCursor(ta, '\n>>>标题\n内容\n<<<\n'); break;
-    case 'table':
-      showTablePopup(this); return;
+    case 'code': showCodePopup(this); return;
+    case 'heading': showHeadingPopup(this); return;
+    case 'color': showColorPopup(this); return;
+    case 'details': insertAtCursor(ta, '\n>>>标题\n内容\n<<<\n'); break;
+    case 'table': showTablePopup(this); return;
   }
 
   ta.dispatchEvent(new Event('input'));
@@ -569,15 +553,25 @@ function closeMdPopup() {
 }
 
 function positionPopup(anchorBtn) {
-  var rect = anchorBtn.getBoundingClientRect();
   var popup = mdPopupEl;
+  var toolbar = document.getElementById('mdToolbar');
+  if (!toolbar) return;
+
+  var toolbarRect = toolbar.getBoundingClientRect();
+  var btnRect = anchorBtn.getBoundingClientRect();
+
+  popup.style.bottom = (window.innerHeight - toolbarRect.top + 8) + 'px';
+  popup.style.top = '';
   popup.style.left = '';
   popup.style.right = '';
-  popup.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
 
-  // 确保不超出屏幕
-  var left = rect.left;
-  if (left + 200 > window.innerWidth) left = window.innerWidth - 210;
+  popup.classList.add('visible');
+  var popupWidth = popup.offsetWidth;
+
+  var left = btnRect.left + btnRect.width / 2 - popupWidth / 2;
+  if (left + popupWidth > window.innerWidth - 10) {
+    left = window.innerWidth - popupWidth - 10;
+  }
   if (left < 10) left = 10;
   popup.style.left = left + 'px';
 }
@@ -595,7 +589,6 @@ function showHeadingPopup(btn) {
   }
   mdPopupEl.innerHTML = html;
   positionPopup(btn);
-  mdPopupEl.classList.add('visible');
 
   var items = mdPopupEl.querySelectorAll('[data-hlevel]');
   for (var j = 0; j < items.length; j++) {
@@ -618,7 +611,6 @@ function showCodePopup(btn) {
   html += '<div class="md-popup-item" data-ctype="block">代码块 ```</div>';
   mdPopupEl.innerHTML = html;
   positionPopup(btn);
-  mdPopupEl.classList.add('visible');
 
   var items = mdPopupEl.querySelectorAll('[data-ctype]');
   for (var j = 0; j < items.length; j++) {
@@ -654,7 +646,6 @@ function showColorPopup(btn) {
   html += '</div>';
   mdPopupEl.innerHTML = html;
   positionPopup(btn);
-  mdPopupEl.classList.add('visible');
 
   var btns = mdPopupEl.querySelectorAll('[data-color]');
   for (var j = 0; j < btns.length; j++) {
@@ -686,7 +677,6 @@ function showTablePopup(btn) {
   html += '</div>';
   mdPopupEl.innerHTML = html;
   positionPopup(btn);
-  mdPopupEl.classList.add('visible');
 
   var selectedCol = 3, selectedRow = 2;
 
@@ -710,13 +700,11 @@ function showTablePopup(btn) {
 
   document.getElementById('tableInsertBtn').addEventListener('click', function() {
     var table = '\n';
-    // 表头
     table += '|';
     for (var c2 = 0; c2 < selectedCol; c2++) table += ' 标题 |';
     table += '\n|';
     for (var c3 = 0; c3 < selectedCol; c3++) table += '------|';
     table += '\n';
-    // 数据行
     for (var r2 = 0; r2 < selectedRow; r2++) {
       table += '|';
       for (var c4 = 0; c4 < selectedCol; c4++) table += '  |';
@@ -729,7 +717,6 @@ function showTablePopup(btn) {
   });
 }
 
-// 点击其他地方关闭弹窗
 document.addEventListener('click', function(e) {
   if (mdPopupEl && mdPopupEl.classList.contains('visible')) {
     if (!mdPopupEl.contains(e.target) && !e.target.classList.contains('md-tool-btn')) {
