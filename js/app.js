@@ -118,6 +118,7 @@ menuBtn.addEventListener('click', function() { sidebar.classList.contains('activ
 sidebarOverlay.addEventListener('click', closeSidebar);
 
 document.getElementById('sidebarHome').addEventListener('click', function() { closeSidebar(); navigateTo('home'); });
+document.getElementById('sidebarLyrics').addEventListener('click', function() { closeSidebar(); onLyricsClick(); });
 document.getElementById('navCharCards').addEventListener('click', function() { closeSidebar(); navigateTo('charList'); });
 document.getElementById('navNotes').addEventListener('click', function() { closeSidebar(); navigateTo('noteList'); });
 document.getElementById('navTags').addEventListener('click', function() { closeSidebar(); navigateTo('tagManager'); });
@@ -190,3 +191,4 @@ function initHistoryGuard() {
 loadData();
 navigateTo('home');
 initHistoryGuard();
+initLyrics();
