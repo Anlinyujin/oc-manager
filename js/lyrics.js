@@ -43,33 +43,32 @@ function createLyricsBlock() {
   if (lyricsBlock) return;
   lyricsBlock = document.createElement('div');
   lyricsBlock.id = 'lyricsBlock';
-  // 注意：这里去掉了 transform，改用 updateLyricsPosition 统一控制位置
-  lyricsBlock.style.cssText = 'position:fixed;top:0;left:50%;z-index:500;pointer-events:none;border-radius:0 0 12px 12px;will-change:transform;';
+  // 1. 默认加上 translateX(-50%) 保证初始居中
+  lyricsBlock.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:500;pointer-events:none;border-radius:0 0 12px 12px;will-change:transform;';
   
   updateLyricsBlockStyle();
   document.body.appendChild(lyricsBlock);
 
-  // 监听 Visual Viewport 变化（解决键盘顶起问题）
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateLyricsPosition);
     window.visualViewport.addEventListener('scroll', updateLyricsPosition);
   }
   window.addEventListener('scroll', updateLyricsPosition);
-  updateLyricsPosition();
+  // 延迟一点点执行，确保 append 后能正确计算
+  setTimeout(updateLyricsPosition, 10);
 }
 
-// 核心修复：根据可视区域的偏移量，实时调整位置
 function updateLyricsPosition() {
   if (!lyricsBlock) return;
   
   var offsetY = 0;
+  // 2. 修复：加了 || 0，防止 undefined 导致整个样式失效
   if (window.visualViewport) {
-    offsetY = window.visualViewport.offsetTop;
+    offsetY = window.visualViewport.offsetTop || 0;
   }
   
-  // 使用 transform 同时处理水平居中(-50%)和垂直偏移(offsetY)
-  // 这样比直接改 top 性能更好，且不会和键盘动画冲突
-  lyricsBlock.style.transform = 'translate(-50%, ' + offsetY + 'px)';
+  // 3. 强制使用 translate3d 开启硬件加速，并确保数值有效
+  lyricsBlock.style.transform = 'translate3d(-50%, ' + offsetY + 'px, 0)';
 }
 
 function updateLyricsBlockStyle() {
@@ -86,7 +85,6 @@ function updateLyricsBlockStyle() {
 
 function removeLyricsBlock() {
   if (lyricsBlock) {
-    // 移除监听器
     if (window.visualViewport) {
       window.visualViewport.removeEventListener('resize', updateLyricsPosition);
       window.visualViewport.removeEventListener('scroll', updateLyricsPosition);
@@ -138,7 +136,6 @@ function openLyricsPanel() {
   panel.innerHTML = h;
   document.body.appendChild(panel);
 
-  // 绑定事件
   var heightSlider = document.getElementById('lyricsHeightSlider');
   var widthSlider = document.getElementById('lyricsWidthSlider');
   var heightValue = document.getElementById('lyricsHeightValue');
