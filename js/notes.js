@@ -481,7 +481,7 @@ function handleMdToolAction(e) {
     case 'highlight': insertWrap(ta, '==', '==', '高亮文字'); break;
     case 'quote': insertLinePrefix(ta, '> '); break;
     case 'ul': insertLinePrefix(ta, '- '); break;
-    case 'ol': insertLinePrefix(ta, '1. '); break;
+    case 'ol': insertSmartOl(ta); break;
     case 'hr': insertAtCursor(ta, '\n---\n'); break;
     case 'link':
       if (selected) {
@@ -503,6 +503,44 @@ function handleMdToolAction(e) {
 
   ta.dispatchEvent(new Event('input'));
   ta.focus();
+}
+
+// 智能有序列表：自动递增编号
+function insertSmartOl(ta) {
+  var start = ta.selectionStart;
+  var textBefore = ta.value.substring(0, start);
+  var after = ta.value.substring(start);
+
+  // 找到光标所在行的开头
+  var lastNewline = textBefore.lastIndexOf('\n');
+  var currentLineStart = lastNewline + 1;
+  var currentLine = textBefore.substring(currentLineStart);
+
+  // 检查上一行是否有编号
+  var prevLines = textBefore.substring(0, currentLineStart);
+  var prevLineStart = prevLines.lastIndexOf('\n', prevLines.length - 2) + 1;
+  var prevLine = prevLines.substring(prevLineStart, prevLines.length - 1);
+  var prevMatch = prevLine.match(/^(\s*)(\d+)\.\s/);
+
+  var num = 1;
+  if (prevMatch) {
+    num = parseInt(prevMatch[2]) + 1;
+  }
+
+  // 如果当前行是空的（光标在行首或行首只有空白）
+  var prefix = num + '. ';
+  if (currentLine.trim() === '') {
+    if (currentLine === '' && (textBefore.length === 0 || textBefore.charAt(textBefore.length - 1) === '\n')) {
+      ta.value = textBefore + prefix + after;
+      ta.selectionStart = ta.selectionEnd = start + prefix.length;
+    } else {
+      ta.value = textBefore + '\n' + prefix + after;
+      ta.selectionStart = ta.selectionEnd = start + 1 + prefix.length;
+    }
+  } else {
+    ta.value = textBefore + '\n' + prefix + after;
+    ta.selectionStart = ta.selectionEnd = start + 1 + prefix.length;
+  }
 }
 
 function insertWrap(ta, prefix, suffix, placeholder) {
@@ -547,33 +585,39 @@ function insertAtCursor(ta, text) {
   ta.selectionStart = ta.selectionEnd = start + text.length;
 }
 
-// ===== 弹出面板 =====
+// ===== 弹出面板（居中显示） =====
 function closeMdPopup() {
   if (mdPopupEl) mdPopupEl.classList.remove('visible');
 }
 
-function positionPopup(anchorBtn) {
+function positionPopup() {
   var popup = mdPopupEl;
   var toolbar = document.getElementById('mdToolbar');
-  if (!toolbar) return;
+  if (!toolbar || !popup) return;
 
   var toolbarRect = toolbar.getBoundingClientRect();
-  var btnRect = anchorBtn.getBoundingClientRect();
 
-  popup.style.bottom = (window.innerHeight - toolbarRect.top + 8) + 'px';
-  popup.style.top = '';
-  popup.style.left = '';
-  popup.style.right = '';
-
+  // 先显示以获取尺寸
+  popup.style.visibility = 'hidden';
+  popup.style.display = 'block';
   popup.classList.add('visible');
-  var popupWidth = popup.offsetWidth;
 
-  var left = btnRect.left + btnRect.width / 2 - popupWidth / 2;
-  if (left + popupWidth > window.innerWidth - 10) {
-    left = window.innerWidth - popupWidth - 10;
-  }
+  var popupWidth = popup.offsetWidth;
+  var popupHeight = popup.offsetHeight;
+
+  // 水平居中
+  var left = (window.innerWidth - popupWidth) / 2;
   if (left < 10) left = 10;
+
+  // 在工具栏上方
+  var bottom = (window.innerHeight - toolbarRect.top) + 8;
+
   popup.style.left = left + 'px';
+  popup.style.right = '';
+  popup.style.bottom = bottom + 'px';
+  popup.style.top = '';
+  popup.style.visibility = '';
+  popup.style.display = '';
 }
 
 function showHeadingPopup(btn) {
@@ -588,7 +632,7 @@ function showHeadingPopup(btn) {
     html += '<div class="md-popup-item" data-hlevel="' + levels[i].l + '">H' + levels[i].l + '  ' + levels[i].t + '</div>';
   }
   mdPopupEl.innerHTML = html;
-  positionPopup(btn);
+  positionPopup();
 
   var items = mdPopupEl.querySelectorAll('[data-hlevel]');
   for (var j = 0; j < items.length; j++) {
@@ -610,7 +654,7 @@ function showCodePopup(btn) {
   html += '<div class="md-popup-item" data-ctype="inline">行内代码 `code`</div>';
   html += '<div class="md-popup-item" data-ctype="block">代码块 ```</div>';
   mdPopupEl.innerHTML = html;
-  positionPopup(btn);
+  positionPopup();
 
   var items = mdPopupEl.querySelectorAll('[data-ctype]');
   for (var j = 0; j < items.length; j++) {
@@ -645,7 +689,7 @@ function showColorPopup(btn) {
   }
   html += '</div>';
   mdPopupEl.innerHTML = html;
-  positionPopup(btn);
+  positionPopup();
 
   var btns = mdPopupEl.querySelectorAll('[data-color]');
   for (var j = 0; j < btns.length; j++) {
@@ -676,7 +720,7 @@ function showTablePopup(btn) {
   html += '<button class="md-popup-insert" id="tableInsertBtn">插入表格</button>';
   html += '</div>';
   mdPopupEl.innerHTML = html;
-  positionPopup(btn);
+  positionPopup();
 
   var selectedCol = 3, selectedRow = 2;
 
