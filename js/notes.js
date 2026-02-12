@@ -287,7 +287,10 @@ function renderNoteEdit(data) {
       }
       h += '</div>';
     }
-    h += '<div class="note-preview-clean">' + renderMarkdown(note.content) + '</div>';
+    h += '<div class="note-preview-clean" id="notePreviewContent">' + renderMarkdown(note.content) + '</div>';
+    h += '<div style="text-align:center; padding:20px 0 40px;">';
+    h += '<button class="action-btn" id="previewSaveImgBtn">保存为图片</button>';
+    h += '</div>';
   } else {
     h += '<input class="note-title-clean" id="noteTitleInput" value="' + escapeHtml(note.title) + '">';
     h += '<div class="note-tags-clean" id="noteTagsRow">';
@@ -316,6 +319,18 @@ function renderNoteEdit(data) {
     if (noteEditPreview) hideMdToolbar();
     renderNoteEdit(data);
   });
+
+  if (noteEditPreview) {
+    var saveImgBtn = document.getElementById('previewSaveImgBtn');
+    if (saveImgBtn) {
+      saveImgBtn.addEventListener('click', function() {
+        showToast('正在生成图片...');
+        var previewEl = document.getElementById('notePreviewContent');
+        var titleText = note.title || '未命名笔记';
+        savePreviewAsImage(previewEl, titleText);
+      });
+    }
+  }
 
   if (!noteEditPreview) {
     var titleInput = document.getElementById('noteTitleInput');
@@ -511,26 +526,36 @@ function insertSmartOl(ta) {
   var textBefore = ta.value.substring(0, start);
   var after = ta.value.substring(start);
 
-  // 找到光标所在行的开头
+  // 找光标所在行的开头位置
   var lastNewline = textBefore.lastIndexOf('\n');
-  var currentLineStart = lastNewline + 1;
-  var currentLine = textBefore.substring(currentLineStart);
+  var currentLine = textBefore.substring(lastNewline + 1);
 
-  // 检查上一行是否有编号
-  var prevLines = textBefore.substring(0, currentLineStart);
-  var prevLineStart = prevLines.lastIndexOf('\n', prevLines.length - 2) + 1;
-  var prevLine = prevLines.substring(prevLineStart, prevLines.length - 1);
-  var prevMatch = prevLine.match(/^(\s*)(\d+)\.\s/);
-
-  var num = 1;
-  if (prevMatch) {
-    num = parseInt(prevMatch[2]) + 1;
+  // 往上扫描，找最近的连续编号行的最大编号
+  var num = 0;
+  var linesBefore = textBefore.split('\n');
+  // 从倒数第二行开始往上找（倒数第一行是当前行）
+  for (var i = linesBefore.length - 2; i >= 0; i--) {
+    var m = linesBefore[i].match(/^(\d+)\.\s/);
+    if (m) {
+      num = parseInt(m[1]);
+      break;
+    } else if (linesBefore[i].trim() === '') {
+      // 遇到空行就停止
+      break;
+    }
+  }
+  // 也检查当前行本身是否已经是编号行
+  var currentMatch = currentLine.match(/^(\d+)\.\s/);
+  if (currentMatch) {
+    num = parseInt(currentMatch[1]);
   }
 
-  // 如果当前行是空的（光标在行首或行首只有空白）
-  var prefix = num + '. ';
+  var nextNum = num + 1;
+  var prefix = nextNum + '. ';
+
+  // 如果当前行是空的
   if (currentLine.trim() === '') {
-    if (currentLine === '' && (textBefore.length === 0 || textBefore.charAt(textBefore.length - 1) === '\n')) {
+    if (textBefore.length === 0 || textBefore.charAt(textBefore.length - 1) === '\n') {
       ta.value = textBefore + prefix + after;
       ta.selectionStart = ta.selectionEnd = start + prefix.length;
     } else {
@@ -891,7 +916,6 @@ function showNoteExportOptions() {
   h += '<div class="note-export-actions">';
   h += '<button class="preview-btn" id="noteExportCopy">复制</button>';
   h += '<button class="preview-btn" id="noteExportTxt">TXT</button>';
-  h += '<button class="preview-btn" id="noteExportImg">图片</button>';
   h += '</div></div>';
   h += '<textarea class="preview-textarea" id="noteExportText">' + escapeHtml(text) + '</textarea>';
   h += '</div>';
@@ -913,11 +937,5 @@ function showNoteExportOptions() {
     a.href = URL.createObjectURL(blob);
     a.download = '笔记导出.txt';
     a.click(); showToast('已下载');
-  });
-  document.getElementById('noteExportImg').addEventListener('click', function() {
-    showToast('正在生成图片...');
-    var rawText = document.getElementById('noteExportText').value;
-    var title = notes.length === 1 ? notes[0].title : '';
-    exportNoteAsImage(rawText, title).then(function() { showToast('图片已保存'); });
   });
 }
