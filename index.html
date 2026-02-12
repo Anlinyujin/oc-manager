@@ -41,7 +41,10 @@ window.onerror = function(msg, url, line, col, error) {
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="sidebar" id="sidebar">
-  <div class="sidebar-header" id="sidebarHome">OC</div>
+  <div class="sidebar-header">
+    <span id="sidebarHome" style="flex:1;cursor:pointer;">OC</span>
+    <span id="sidebarLyrics" style="cursor:pointer;font-size:18px;padding:4px 8px;">♪</span>
+  </div>
   <nav class="sidebar-nav">
     <div class="sidebar-item" id="navCharCards">人设卡</div>
     <div class="sidebar-item" id="navNotes">笔记</div>
@@ -86,6 +89,7 @@ window.onerror = function(msg, url, line, col, error) {
 <script src="js/characters.js"></script>
 <script src="js/notes.js"></script>
 <script src="js/tags.js"></script>
+<script src="js/lyrics.js"></script>
 <script src="js/app.js"></script>
 
 <script>
