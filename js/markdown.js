@@ -1,250 +1,428 @@
-// ===== Markdown 渲染 (增强版 v2) =====
+// ===== Markdown 渲染（增强版 v2） =====
 
 function renderMarkdown(text) {
   if (!text) return '';
-  
   var lines = text.split('\n');
-  var html = '';
-  var stack = []; // 状态栈: {type: 'ul'|'ol'|'quote', level: int}
-  
-  for (var i = 0; i < lines.length; i++) {
+  var result = '';
+  var i = 0;
+
+  while (i < lines.length) {
     var line = lines[i];
-    var trimLine = line.trim();
-    
-    // 1. 代码块处理 (最高优先级)
-    if (trimLine.startsWith('```')) {
-      // 关闭所有列表和引用
-      while(stack.length > 0) {
-        var top = stack.pop();
-        html += closeTag(top.type);
-      }
-      
+
+    // 代码块
+    if (line.trim().indexOf('```') === 0) {
       var codeContent = '';
       i++;
-      while (i < lines.length && !lines[i].trim().startsWith('```')) {
-        codeContent += lines[i] + '\n';
+      while (i < lines.length && lines[i].trim().indexOf('```') !== 0) {
+        codeContent += (codeContent ? '\n' : '') + lines[i];
         i++;
       }
-      html += '<pre><code>' + escapeHtml(codeContent) + '</code><div class="code-copy-btn" onclick="copyCode(this)">复制</div></pre>\n';
+      i++; // skip closing ```
+      var codeId = 'code_' + Math.random().toString(36).substr(2, 6);
+      result += '<pre id="' + codeId + '"><button class="code-copy-btn" onclick="copyCodeBlock(\'' + codeId + '\')">复制</button><code>' + escapeHtml(codeContent) + '</code></pre>\n';
       continue;
     }
-    
-    // 2. 折叠块处理 (>>>)
-    if (trimLine.startsWith('>>>')) {
-      while(stack.length > 0) { html += closeTag(stack.pop().type); }
-      var title = trimLine.substring(3).trim() || '详情';
-      html += '<details><summary>' + escapeHtml(title) + '</summary>\n';
-      continue;
-    }
-    if (trimLine.startsWith('<<<')) {
-      while(stack.length > 0) { html += closeTag(stack.pop().type); }
-      html += '</details>\n';
-      continue;
-    }
-    
-    // 3. 表格处理
-    if (trimLine.startsWith('|') && trimLine.endsWith('|')) {
-      while(stack.length > 0) { html += closeTag(stack.pop().type); }
-      var tableRows = [line];
-      // 向下预读
-      while (i + 1 < lines.length && lines[i+1].trim().startsWith('|')) {
+
+    // 折叠块 >>>title ... <<<
+    if (line.trim().indexOf('>>>') === 0 && line.trim() !== '>>>') {
+      var summary = line.trim().substring(3).trim();
+      var detailContent = '';
+      i++;
+      while (i < lines.length && lines[i].trim() !== '<<<') {
+        detailContent += (detailContent ? '\n' : '') + lines[i];
         i++;
-        tableRows.push(lines[i]);
       }
-      html += buildTable(tableRows);
+      i++; // skip <<<
+      result += '<details><summary>' + inlineFormat(summary) + '</summary><div>' + renderMarkdown(detailContent) + '</div></details>\n';
       continue;
     }
-    
-    // 4. 分割线
-    if (/^(\-{3,}|\*{3,})$/.test(trimLine)) {
-      while(stack.length > 0) { html += closeTag(stack.pop().type); }
-      html += '<hr>\n';
-      continue;
-    }
-    
-    // 5. 标题
-    var headerMatch = line.match(/^(#{1,6})\s+(.+)$/);
-    if (headerMatch) {
-      while(stack.length > 0) { html += closeTag(stack.pop().type); }
-      var level = headerMatch[1].length;
-      html += '<h' + level + '>' + inlineFormat(headerMatch[2]) + '</h' + level + '>\n';
-      continue;
-    }
-    
-    // 6. 列表和引用 (核心嵌套逻辑)
-    var currentLevel = 0;
-    var currentType = null; // 'ul', 'ol', 'quote'
-    var content = line;
-    
-    // 检测缩进和前缀
-    var indentMatch = line.match(/^(\s*)(.*)/);
-    var spaces = indentMatch[1].length;
-    var rest = indentMatch[2];
-    
-    // 引用 (>)
-    if (rest.startsWith('>')) {
-      // 计算 > 的数量作为层级
-      var quoteMatch = rest.match(/^>+\s?(.*)/);
-      if (quoteMatch) {
-        // 多级引用 >>>
-        var qCount = rest.match(/^>+/)[0].length;
-        currentLevel = qCount;
-        currentType = 'quote';
-        content = quoteMatch[1];
+
+    // 表格
+    if (line.indexOf('|') >= 0 && line.trim().charAt(0) === '|') {
+      var tableRows = [];
+      while (i < lines.length && lines[i].trim().charAt(0) === '|') {
+        if (!/^\|[\s\-:|]+\|$/.test(lines[i].trim())) {
+          tableRows.push(lines[i]);
+        }
+        i++;
       }
-    } 
-    // 无序列表 (-, *)
-    else if (/^[\-\*]\s/.test(rest)) {
-      currentLevel = Math.floor(spaces / 2) + 1; // 2空格一级
-      currentType = 'ul';
-      content = rest.substring(2);
+      result += buildTable(tableRows);
+      continue;
     }
-    // 有序列表 (1.)
-    else if (/^\d+\.\s/.test(rest)) {
-      currentLevel = Math.floor(spaces / 2) + 1;
-      currentType = 'ol';
-      content = rest.replace(/^\d+\.\s/, '');
+
+    // 空行
+    if (line.trim() === '') { i++; continue; }
+
+    // 标题
+    var headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      var level = headingMatch[1].length;
+      result += '<h' + level + '>' + inlineFormat(headingMatch[2]) + '</h' + level + '>\n';
+      i++; continue;
     }
-    
-    // 状态栈调整
-    if (currentType) {
-      // 如果当前行是列表/引用
-      
-      // 1. 如果栈顶类型不同，或者层级更深，需要调整
-      while (stack.length > 0) {
-        var top = stack[stack.length - 1];
-        if (top.type !== currentType) {
-          // 类型变了，关闭旧的
-          html += closeTag(stack.pop().type);
-        } else if (top.level > currentLevel) {
-          // 层级变浅了，关闭深层
-          html += closeTag(stack.pop().type);
+
+    // 分割线
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+      result += '<hr>\n';
+      i++; continue;
+    }
+
+    // 引用块（收集所有连续的引用行）
+    if (line.match(/^>+\s?/)) {
+      var quoteLines = [];
+      while (i < lines.length && lines[i].match(/^>+\s?/)) {
+        quoteLines.push(lines[i]);
+        i++;
+      }
+      result += buildBlockquote(quoteLines);
+      continue;
+    }
+
+    // 列表（无序和有序，支持嵌套）
+    if (line.match(/^(\s*)([-*+]|\d+\.)\s+/)) {
+      var listLines = [];
+      while (i < lines.length && (lines[i].match(/^(\s*)([-*+]|\d+\.)\s+/) || (lines[i].match(/^\s+/) && listLines.length > 0 && lines[i].trim() !== ''))) {
+        listLines.push(lines[i]);
+        i++;
+      }
+      result += buildNestedList(listLines);
+      continue;
+    }
+
+    // 普通段落
+    result += '<p>' + inlineFormat(line) + '</p>\n';
+    i++;
+  }
+
+  return result;
+}
+
+function inlineFormat(text) {
+  if (!text) return '';
+  var s = escapeHtml(text);
+  // 行内代码（先处理，防止内部被格式化）
+  var codeParts = [];
+  s = s.replace(/`([^`]+)`/g, function(m, c) {
+    var idx = codeParts.length;
+    codeParts.push('<code>' + c + '</code>');
+    return '%%CODE' + idx + '%%';
+  });
+  // 链接和图片
+  s = s.replace(/!$$([^$$]*)\]$([^)]+)$/g, '<img src="$2" alt="$1" style="max-width:100%">');
+  s = s.replace(/$$([^$$]+)\]$([^)]+)$/g, '<a href="$2" target="_blank">$1</a>');
+  // 粗斜体
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>\$1</em></strong>');
+  // 粗体
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>\$1</strong>');
+  // 斜体
+  s = s.replace(/\*(.+?)\*/g, '<em>\$1</em>');
+  // 删除线
+  s = s.replace(/~~(.+?)~~/g, '<del>\$1</del>');
+  // 下划线
+  s = s.replace(/\+\+(.+?)\+\+/g, '<u>\$1</u>');
+  // 高亮
+  s = s.replace(/==(.+?)==/g, '<mark>\$1</mark>');
+  // 文字颜色 {color}(text)
+  s = s.replace(/\{(\w+)\}$(.+?)$/g, '<span style="color:$1">$2</span>');
+  // 还原行内代码
+  for (var i = 0; i < codeParts.length; i++) {
+    s = s.replace('%%CODE' + i + '%%', codeParts[i]);
+  }
+  return s;
+}
+
+function buildBlockquote(lines) {
+  // 按引用层级分组
+  var result = '';
+  var currentLevel = 0;
+  var innerLines = [];
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var match = line.match(/^(>+)\s?(.*)/);
+    if (!match) continue;
+    var level = match[1].length;
+    var content = match[2];
+
+    if (level === 1) {
+      // 检查是否有更深层级
+      var hasDeeper = false;
+      var deeperLines = [];
+      var j = i + 1;
+      while (j < lines.length) {
+        var dm = lines[j].match(/^(>+)\s?(.*)/);
+        if (!dm) break;
+        if (dm[1].length > 1) {
+          hasDeeper = true;
+          deeperLines.push(lines[j].substring(1)); // 去掉一层 >
+          j++;
         } else {
           break;
         }
       }
-      
-      // 2. 如果层级更深，开启新标签
-      var lastLevel = stack.length > 0 ? stack[stack.length-1].level : 0;
-      if (currentLevel > lastLevel) {
-        for (var l = lastLevel; l < currentLevel; l++) {
-          html += openTag(currentType);
-          stack.push({type: currentType, level: l + 1});
+
+      if (hasDeeper) {
+        if (content.trim()) {
+          innerLines.push(content);
         }
-      }
-      
-      // 3. 输出内容
-      if (currentType === 'quote') {
-        // 引用内允许换行，不包p标签，直接追加文本
-        if (content.trim() === '') html += '<br>';
-        else html += inlineFormat(content) + '<br>';
-      } else {
-        html += '<li>' + inlineFormat(content) + '</li>\n';
-      }
-      
-    } else {
-      // 普通文本行
-      if (trimLine === '') {
-        // 空行，关闭所有列表，保留引用？
-        // 简单策略：空行打断列表，不打断引用(除非双空行，这里简化处理)
-        while(stack.length > 0 && stack[stack.length-1].type !== 'quote') {
-          html += closeTag(stack.pop().type);
+        // 递归处理内部
+        var innerQuote = buildBlockquote(deeperLines);
+        var innerHtml = '';
+        for (var k = 0; k < innerLines.length; k++) {
+          innerHtml += (innerHtml ? '<br>' : '') + inlineFormat(innerLines[k]);
         }
-        if (stack.length === 0) html += '<br>\n';
+        result += '<blockquote>';
+        if (innerHtml) result += '<p>' + innerHtml + '</p>';
+        result += innerQuote;
+        result += '</blockquote>\n';
+        innerLines = [];
+        i = j - 1;
       } else {
-        // 如果在引用中
-        if (stack.length > 0 && stack[stack.length-1].type === 'quote') {
-           html += inlineFormat(trimLine) + '<br>';
+        if (content.trim() === '') {
+          // 空引用行 = 换行
+          innerLines.push('');
         } else {
-           // 纯文本，关闭所有列表
-           while(stack.length > 0) { html += closeTag(stack.pop().type); }
-           html += '<p>' + inlineFormat(trimLine) + '</p>\n';
+          innerLines.push(content);
         }
       }
     }
   }
-  
-  // 结束，关闭所有
-  while(stack.length > 0) { html += closeTag(stack.pop().type); }
-  
-  return html;
+
+  // 处理剩余的行
+  if (innerLines.length > 0) {
+    var paragraphs = [];
+    var currentPara = [];
+    for (var p = 0; p < innerLines.length; p++) {
+      if (innerLines[p] === '') {
+        if (currentPara.length > 0) {
+          paragraphs.push(currentPara.join('<br>'));
+          currentPara = [];
+        }
+      } else {
+        currentPara.push(inlineFormat(innerLines[p]));
+      }
+    }
+    if (currentPara.length > 0) {
+      paragraphs.push(currentPara.join('<br>'));
+    }
+    var html = '';
+    for (var q = 0; q < paragraphs.length; q++) {
+      html += '<p>' + paragraphs[q] + '</p>';
+    }
+    result += '<blockquote>' + html + '</blockquote>\n';
+  }
+
+  return result;
 }
 
-function openTag(type) {
-  if (type === 'ul') return '<ul>\n';
-  if (type === 'ol') return '<ol>\n';
-  if (type === 'quote') return '<blockquote>\n';
-  return '';
+function buildNestedList(lines) {
+  if (lines.length === 0) return '';
+
+  // 解析每行的缩进级别和内容
+  var items = [];
+  for (var i = 0; i < lines.length; i++) {
+    var match = lines[i].match(/^(\s*)([-*+]|\d+\.)\s+(.*)/);
+    if (match) {
+      var indent = match[1].length;
+      var marker = match[2];
+      var content = match[3];
+      var type = /^\d+\./.test(marker) ? 'ol' : 'ul';
+      items.push({ indent: indent, type: type, content: content });
+    }
+  }
+
+  if (items.length === 0) return '';
+
+  // 标准化缩进级别
+  var indents = [];
+  for (var j = 0; j < items.length; j++) {
+    if (indents.indexOf(items[j].indent) < 0) {
+      indents.push(items[j].indent);
+    }
+  }
+  indents.sort(function(a, b) { return a - b; });
+  for (var k = 0; k < items.length; k++) {
+    items[k].level = indents.indexOf(items[k].indent);
+  }
+
+  return buildListFromItems(items, 0, 0, items.length);
 }
 
-function closeTag(type) {
-  if (type === 'ul') return '</ul>\n';
-  if (type === 'ol') return '</ol>\n';
-  if (type === 'quote') return '</blockquote>\n';
-  return '';
-}
+function buildListFromItems(items, targetLevel, start, end) {
+  var result = '';
+  var i = start;
 
-function inlineFormat(text) {
-  var s = escapeHtml(text);
-  // 图片
-  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%">');
-  // 链接
-  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-  // 粗斜体
-  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  // 粗体
-  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // 斜体
-  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  // 删除线
-  s = s.replace(/~~(.+?)~~/g, '<del>$1</del>');
-  // 下划线 ++text++
-  s = s.replace(/\+\+(.+?)\+\+/g, '<ins>$1</ins>');
-  // 高亮 ==text==
-  s = s.replace(/==(.+?)==/g, '<mark>$1</mark>');
-  // 行内代码
-  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-  // 颜色 {red}(text)
-  s = s.replace(/\{([a-z]+)\}\((.+?)\)/g, function(match, color, content) {
-    return '<span class="md-color-' + color + '">' + content + '</span>';
-  });
-  
-  return s;
+  while (i < end) {
+    if (items[i].level < targetLevel) break;
+    if (items[i].level === targetLevel) {
+      var listType = items[i].type;
+      result += '<' + listType + '>';
+
+      while (i < end && items[i].level >= targetLevel) {
+        if (items[i].level === targetLevel) {
+          result += '<li>' + inlineFormat(items[i].content);
+          // 检查子级
+          var childStart = i + 1;
+          while (childStart < end && items[childStart].level > targetLevel) {
+            childStart++;
+          }
+          if (childStart > i + 1) {
+            result += buildListFromItems(items, targetLevel + 1, i + 1, childStart);
+            i = childStart;
+          } else {
+            i++;
+          }
+          result += '</li>';
+        } else {
+          break;
+        }
+      }
+
+      result += '</' + listType + '>';
+    } else {
+      i++;
+    }
+  }
+
+  return result;
 }
 
 function buildTable(rows) {
-  if (rows.length < 2) return '';
-  // 检查第二行是否是分隔符
-  if (!/^\|?[\s\-\:|]+\|?$/.test(rows[1])) return '';
-  
+  if (rows.length === 0) return '';
   var html = '<table>';
-  // 表头
-  var headers = rows[0].split('|').filter(function(c){return c.trim()!==''});
-  html += '<tr>';
-  headers.forEach(function(h){ html += '<th>' + inlineFormat(h.trim()) + '</th>'; });
-  html += '</tr>';
-  
-  // 内容 (跳过第二行分隔符)
-  for (var i = 2; i < rows.length; i++) {
+  for (var i = 0; i < rows.length; i++) {
     var cells = rows[i].split('|');
-    // 处理首尾可能的空串
-    if (rows[i].trim().startsWith('|')) cells.shift();
-    if (rows[i].trim().endsWith('|')) cells.pop();
-    
+    var filtered = [];
+    for (var j = 1; j < cells.length - 1; j++) {
+      filtered.push(cells[j].trim());
+    }
+    if (filtered.length === 0) continue;
+    var tag = i === 0 ? 'th' : 'td';
     html += '<tr>';
-    cells.forEach(function(c){ html += '<td>' + inlineFormat(c?c.trim():'') + '</td>'; });
+    for (var k = 0; k < filtered.length; k++) {
+      html += '<' + tag + '>' + inlineFormat(filtered[k]) + '</' + tag + '>';
+    }
     html += '</tr>';
   }
   html += '</table>';
   return html;
 }
 
-// 全局函数：复制代码
-window.copyCode = function(btn) {
-  var code = btn.previousElementSibling.textContent;
-  navigator.clipboard.writeText(code).then(function() {
-    var original = btn.textContent;
-    btn.textContent = '已复制';
-    setTimeout(function(){ btn.textContent = original; }, 1500);
+function copyCodeBlock(id) {
+  var pre = document.getElementById(id);
+  if (!pre) return;
+  var code = pre.querySelector('code');
+  if (!code) return;
+  var text = code.textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      showToast('已复制');
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('已复制');
+  }
+}
+
+function exportNoteAsImage(markdownText, title) {
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  var width = window.innerWidth * 2;
+  var padding = 48;
+  var fontSize = 28;
+  var lineHeight = Math.floor(fontSize * 1.8);
+  var titleFontSize = 40;
+  var maxTextWidth = width - padding * 2;
+
+  ctx.font = fontSize + 'px -apple-system, sans-serif';
+
+  var allLines = [];
+
+  if (title) {
+    ctx.font = 'bold ' + titleFontSize + 'px -apple-system, sans-serif';
+    var titleLines = wrapText(ctx, title, maxTextWidth);
+    for (var t = 0; t < titleLines.length; t++) {
+      allLines.push({ text: titleLines[t], bold: true, size: titleFontSize });
+    }
+    allLines.push({ text: '', size: fontSize });
+  }
+
+  var plainText = markdownText
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*\*(.+?)\*\*\*/g, '\$1')
+    .replace(/\*\*(.+?)\*\*/g, '\$1')
+    .replace(/\*(.+?)\*/g, '\$1')
+    .replace(/~~(.+?)~~/g, '\$1')
+    .replace(/\+\+(.+?)\+\+/g, '\$1')
+    .replace(/==(.+?)==/g, '\$1')
+    .replace(/\{(\w+)\}$(.+?)$/g, '\$2')
+    .replace(/`([^`]+)`/g, '\$1')
+    .replace(/^>\s?/gm, '| ')
+    .replace(/^[-*+]\s+/gm, '• ')
+    .replace(/^(\d+)\.\s+/gm, '\$1. ')
+    .replace(/^---$/gm, '────────────────');
+
+  ctx.font = fontSize + 'px -apple-system, sans-serif';
+  var textLines = plainText.split('\n');
+  for (var p = 0; p < textLines.length; p++) {
+    if (textLines[p].trim() === '') {
+      allLines.push({ text: '', size: fontSize });
+    } else {
+      var wrapped = wrapText(ctx, textLines[p], maxTextWidth);
+      for (var w = 0; w < wrapped.length; w++) {
+        allLines.push({ text: wrapped[w], size: fontSize });
+      }
+    }
+  }
+
+  var totalHeight = padding * 2 + allLines.length * lineHeight;
+  canvas.width = width;
+  canvas.height = Math.max(totalHeight, 200);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  var y = padding + fontSize;
+  for (var d = 0; d < allLines.length; d++) {
+    var item = allLines[d];
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = (item.bold ? 'bold ' : '') + item.size + 'px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(item.text, padding, y);
+    y += lineHeight;
+  }
+
+  return new Promise(function(resolve) {
+    canvas.toBlob(function(blob) {
+      if (blob) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (title || '笔记') + '.png';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+      resolve();
+    }, 'image/png');
   });
-};
+}
+
+function wrapText(ctx, text, maxWidth) {
+  if (!text) return [''];
+  var lines = [];
+  var current = '';
+  for (var i = 0; i < text.length; i++) {
+    var test = current + text[i];
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = text[i];
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length > 0 ? lines : [''];
+}
