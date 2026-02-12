@@ -338,20 +338,20 @@ function generateExportXML(ids, compact) {
   return xml;
 }
 
-// ===== 角色编辑页 (已修改导航栏) =====
+// ===== 角色编辑页 =====
 function renderCharEdit(data) {
   var page = document.getElementById('pageCharEdit');
   var char = findCharacter(data.charId);
   if (!char) { navigateTo('charList'); return; }
 
   var h = '<div class="note-edit-page">';
-  // 独立导航栏（和笔记编辑页同款）
+  // 独立导航栏
   h += '<div class="note-edit-topnav">';
   h += '<button class="btn-icon note-corner" data-action="back" title="返回">‹</button>';
   h += '<button class="btn-icon note-corner" data-action="delete-char" data-id="' + char.id + '" title="删除角色">▲</button>';
   h += '</div>';
 
-  h += '<div class="note-edit-body char-edit-body">';
+  h += '<div class="note-edit-body char-edit-body" style="padding-top:8px;">';
 
   // 基本信息
   h += '<div class="section"><div class="section-title">基本信息</div>';
