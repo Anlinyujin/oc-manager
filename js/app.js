@@ -117,7 +117,6 @@ function closeSidebar() { sidebar.classList.remove('active'); sidebarOverlay.cla
 menuBtn.addEventListener('click', function() { sidebar.classList.contains('active') ? closeSidebar() : openSidebar(); });
 sidebarOverlay.addEventListener('click', closeSidebar);
 
-document.getElementById('sidebarHome').addEventListener('click', function() { closeSidebar(); navigateTo('home'); });
 document.getElementById('sidebarLyrics').addEventListener('click', function() { closeSidebar(); onLyricsClick(); });
 document.getElementById('navCharCards').addEventListener('click', function() { closeSidebar(); navigateTo('charList'); });
 document.getElementById('navNotes').addEventListener('click', function() { closeSidebar(); navigateTo('noteList'); });
