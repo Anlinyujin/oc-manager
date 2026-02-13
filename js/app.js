@@ -123,6 +123,18 @@ function closeSidebar() { sidebar.classList.remove('active'); sidebarOverlay.cla
 menuBtn.addEventListener('click', function() { sidebar.classList.contains('active') ? closeSidebar() : openSidebar(); });
 sidebarOverlay.addEventListener('click', closeSidebar);
 
+// ===== 侧边栏 =====
+var menuBtn = document.getElementById('menuBtn');
+var sidebar = document.getElementById('sidebar');
+var sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function isPC() { return window.innerWidth >= 768; }
+function openSidebar() { sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); }
+function closeSidebar() { if (!isPC()) { sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); } }
+
+menuBtn.addEventListener('click', function() { sidebar.classList.contains('active') ? closeSidebar() : openSidebar(); });
+sidebarOverlay.addEventListener('click', closeSidebar);
+
 document.getElementById('sidebarLyrics').addEventListener('click', function() { closeSidebar(); onLyricsClick(); });
 document.getElementById('navCharCards').addEventListener('click', function() { closeSidebar(); navigateTo('charList'); });
 document.getElementById('navNotes').addEventListener('click', function() { closeSidebar(); navigateTo('noteList'); });
@@ -199,3 +211,9 @@ initDarkMode();
 navigateTo('home');
 initHistoryGuard();
 initLyrics();
+
+// PC端初始化时自动展开侧边栏
+if (isPC()) { sidebar.classList.add('active'); }
+window.addEventListener('resize', function() {
+  if (isPC()) { sidebar.classList.add('active'); sidebarOverlay.classList.remove('active'); }
+});
