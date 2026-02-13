@@ -1572,8 +1572,12 @@ body.dark-mode .note-edit-topnav button {
   color: #e0e0e0;
 }
 
-body.dark-mode .note-edit-title {
+body.dark-mode .note-edit-title,
+body.dark-mode .note-title-clean {
   color: #e0e0e0;
+  border-bottom-color: #333;
+  background: transparent;
+  border-color: transparent;
   border-bottom-color: #333;
 }
 
