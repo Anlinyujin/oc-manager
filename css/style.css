@@ -2291,3 +2291,102 @@ body.dark-mode .note-title-clean {
   border-color: transparent !important;
   border-bottom-color: #333 !important;
 }
+
+/* ===== PC端界面美化 (Grid布局) ===== */
+@media (min-width: 768px) {
+  
+  /* 1. 给每个大板块加个“卡片”效果 */
+  .section {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    
+    /* 开启网格布局：自动分列 */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 每列最小280px，自动填满 */
+    gap: 20px 30px; /* 行间距20px，列间距30px */
+  }
+
+  /* 2. 标题栏横跨整行，并加粗 */
+  .section-title {
+    grid-column: 1 / -1; /* 强制占满整行 */
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: 2px solid #f5f5f5;
+    padding-bottom: 12px;
+  }
+
+  /* 3. 针对特定板块的优化 */
+  
+  /* “背景”板块里的输入框，强制占满整行 */
+  .section:has(textarea[data-field="background"]) .field-row {
+    grid-column: 1 / -1;
+  }
+  
+  /* “穿搭”和“其他”这种大文本框，尽量占满整行 */
+  /* 注意：这里用了 :has 选择器，现代浏览器都支持 */
+  .field-row:has(textarea) {
+    grid-column: 1 / -1;
+  }
+
+  /* 4. 优化输入框样式 */
+  .field-label {
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 8px;
+  }
+
+  input[type="text"], textarea, select {
+    background: #f9f9f9; /* 淡淡的灰色背景 */
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  input[type="text"]:focus, textarea:focus, select:focus {
+    background: #fff;
+    border-color: #888;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+  }
+
+  /* 5. 导航栏美化 */
+  .note-edit-topnav {
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* ===== 夜间模式适配 ===== */
+@media (min-width: 768px) {
+  body.dark-mode .section {
+    background: #222;
+    border-color: #333;
+  }
+
+  body.dark-mode .section-title {
+    border-bottom-color: #333;
+  }
+
+  body.dark-mode input[type="text"], 
+  body.dark-mode textarea, 
+  body.dark-mode select {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+
+  body.dark-mode input[type="text"]:focus, 
+  body.dark-mode textarea:focus, 
+  body.dark-mode select:focus {
+    background: #333;
+    border-color: #666;
+  }
+  
+  body.dark-mode .note-edit-topnav {
+    background: rgba(26,26,26,0.9);
+  }
+}
