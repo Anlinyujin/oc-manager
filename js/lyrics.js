@@ -8,7 +8,6 @@ var lyricsConfig = {
   pinned: false
 };
 
-// 颜色选项（低饱和）
 var lyricsColors = [
   { color: '#ffffff', label: '白' },
   { color: '#1a1a1a', label: '黑' },
@@ -47,7 +46,6 @@ function createLyricsBlock() {
   updateLyricsBlockStyle();
   document.body.appendChild(lyricsBlock);
 
-  // 监听 visualViewport 变化，对抗键盘推动
   if (window.visualViewport) {
     var onViewportChange = function() {
       if (!lyricsBlock) return;
@@ -92,67 +90,51 @@ function openLyricsPanel() {
 
   var panel = document.createElement('div');
   panel.id = 'lyricsPanel';
-  panel.className = 'lyrics-panel';
+  panel.className = 'lyrics-adjust-panel';
 
   var h = '';
 
-  // 高度滑块
   h += '<div class="lyrics-slider-row">';
   h += '<span class="lyrics-slider-label">高度</span>';
   h += '<input type="range" class="lyrics-slider" id="lyricsHeightSlider" min="20" max="200" value="' + lyricsConfig.height + '">';
   h += '<span class="lyrics-slider-value" id="lyricsHeightValue">' + lyricsConfig.height + '</span>';
   h += '</div>';
 
-  // 宽度滑块
   h += '<div class="lyrics-slider-row">';
   h += '<span class="lyrics-slider-label">宽度</span>';
   h += '<input type="range" class="lyrics-slider" id="lyricsWidthSlider" min="30" max="100" value="' + lyricsConfig.width + '">';
   h += '<span class="lyrics-slider-value" id="lyricsWidthValue">' + lyricsConfig.width + '</span>';
   h += '</div>';
 
-  // 颜色选择
   h += '<div class="lyrics-colors">';
   for (var i = 0; i < lyricsColors.length; i++) {
     var c = lyricsColors[i];
     var selected = (c.color === lyricsConfig.color) ? ' lyrics-color-selected' : '';
-    var borderStyle = '';
-    if (c.color === '#ffffff' || c.color === '#fff') {
-      borderStyle = 'border:2px solid #d4d4d4;';
-    } else {
-      borderStyle = 'border:2px solid transparent;';
-    }
+    var borderStyle = (c.color === '#ffffff' || c.color === '#fff') ? 'border:2px solid #d4d4d4;' : 'border:2px solid transparent;';
     h += '<div class="lyrics-color-btn' + selected + '" data-color="' + c.color + '" style="background:' + c.color + ';' + borderStyle + '"></div>';
   }
   h += '</div>';
 
-  // 钉子按钮和关闭
   h += '<div class="lyrics-actions">';
-  h += '<button class="lyrics-action-btn" id="lyricsPinBtn">📌 固定</button>';
-  h += '<button class="lyrics-action-btn lyrics-close-btn" id="lyricsCloseBtn">关闭</button>';
+  h += '<button class="lyrics-action-btn" id="lyricsPinBtn">\ud83d\udccc \u56fa\u5b9a</button>';
+  h += '<button class="lyrics-action-btn lyrics-close-btn" id="lyricsCloseBtn">\u5173\u95ed</button>';
   h += '</div>';
 
   panel.innerHTML = h;
   document.body.appendChild(panel);
 
-  // 绑定事件
-  var heightSlider = document.getElementById('lyricsHeightSlider');
-  var widthSlider = document.getElementById('lyricsWidthSlider');
-  var heightValue = document.getElementById('lyricsHeightValue');
-  var widthValue = document.getElementById('lyricsWidthValue');
-
-  heightSlider.addEventListener('input', function() {
+  document.getElementById('lyricsHeightSlider').addEventListener('input', function() {
     lyricsConfig.height = parseInt(this.value);
-    heightValue.textContent = this.value;
+    document.getElementById('lyricsHeightValue').textContent = this.value;
     updateLyricsBlockStyle();
   });
 
-  widthSlider.addEventListener('input', function() {
+  document.getElementById('lyricsWidthSlider').addEventListener('input', function() {
     lyricsConfig.width = parseInt(this.value);
-    widthValue.textContent = this.value;
+    document.getElementById('lyricsWidthValue').textContent = this.value;
     updateLyricsBlockStyle();
   });
 
-  // 颜色按钮
   var colorBtns = panel.querySelectorAll('.lyrics-color-btn');
   for (var j = 0; j < colorBtns.length; j++) {
     colorBtns[j].addEventListener('click', function() {
@@ -166,15 +148,13 @@ function openLyricsPanel() {
     });
   }
 
-  // 固定按钮
   document.getElementById('lyricsPinBtn').addEventListener('click', function() {
     lyricsConfig.pinned = true;
     saveLyricsConfig();
     closeLyricsPanel();
-    showToast('已固定');
+    showToast('\u5df2\u56fa\u5b9a');
   });
 
-  // 关闭按钮
   document.getElementById('lyricsCloseBtn').addEventListener('click', function() {
     lyricsConfig.pinned = false;
     saveLyricsConfig();
@@ -188,7 +168,6 @@ function closeLyricsPanel() {
   if (panel) panel.remove();
 }
 
-// 初始化：如果之前固定了，自动显示色块
 function initLyrics() {
   loadLyricsConfig();
   if (lyricsConfig.pinned) {
@@ -196,7 +175,6 @@ function initLyrics() {
   }
 }
 
-// 侧边栏♪点击
 function onLyricsClick() {
   if (lyricsConfig.pinned) {
     lyricsConfig.pinned = false;
