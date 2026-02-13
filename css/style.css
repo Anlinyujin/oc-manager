@@ -1,3 +1,4 @@
+
 * {
   margin: 0;
   padding: 0;
@@ -1550,14 +1551,34 @@ textarea.field-input.large { min-height: 120px; }
 
 /* ===== 更大屏幕（1200px+）进一步放宽 ===== */
 @media (min-width: 1200px) {
-  .page-content,
-  .note-edit-body,
-  .char-edit-body {
-    max-width: 900px;
+  /* 人设卡列表、标签管理等页面 */
+  .page-content {
+    max-width: 1200px; /* 从900改到1200 */
   }
 
+  /* 人设卡编辑页 */
+  .char-edit-body {
+    max-width: 1100px; /* 稍微窄一点点，方便阅读 */
+  }
+
+  /* 笔记编辑页 - 像Word一样宽 */
+  .note-edit-body {
+    max-width: 1400px; 
+  }
+
+  /* 笔记标题字号再大一点 */
+  .note-title-clean {
+    font-size: 28px;
+  }
+
+  /* 设置页 */
   .settings-page {
-    max-width: 680px;
+    max-width: 800px;
+  }
+  
+  /* 弹窗再宽一点 */
+  .modal {
+    max-width: 600px;
   }
 }
 
