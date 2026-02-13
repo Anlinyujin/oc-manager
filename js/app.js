@@ -117,22 +117,27 @@ var menuBtn = document.getElementById('menuBtn');
 var sidebar = document.getElementById('sidebar');
 var sidebarOverlay = document.getElementById('sidebarOverlay');
 
-function openSidebar() { sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); }
-function closeSidebar() { sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); }
-
-menuBtn.addEventListener('click', function() { sidebar.classList.contains('active') ? closeSidebar() : openSidebar(); });
-sidebarOverlay.addEventListener('click', closeSidebar);
-
-// ===== 侧边栏 =====
-var menuBtn = document.getElementById('menuBtn');
-var sidebar = document.getElementById('sidebar');
-var sidebarOverlay = document.getElementById('sidebarOverlay');
-
 function isPC() { return window.innerWidth >= 768; }
-function openSidebar() { sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); }
-function closeSidebar() { if (!isPC()) { sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); } }
 
-menuBtn.addEventListener('click', function() { sidebar.classList.contains('active') ? closeSidebar() : openSidebar(); });
+function openSidebar() {
+  sidebar.classList.add('active');
+  if (!isPC()) { sidebarOverlay.classList.add('active'); }
+}
+
+function closeSidebar() {
+  if (!isPC()) {
+    sidebar.classList.remove('active');
+    sidebarOverlay.classList.remove('active');
+  }
+}
+
+menuBtn.addEventListener('click', function() {
+  if (sidebar.classList.contains('active') && !isPC()) {
+    closeSidebar();
+  } else {
+    openSidebar();
+  }
+});
 sidebarOverlay.addEventListener('click', closeSidebar);
 
 document.getElementById('sidebarLyrics').addEventListener('click', function() { closeSidebar(); onLyricsClick(); });
@@ -142,6 +147,7 @@ document.getElementById('navTags').addEventListener('click', function() { closeS
 document.getElementById('navSettings').addEventListener('click', function() { closeSidebar(); navigateTo('settings'); });
 document.getElementById('navBackup').addEventListener('click', function() { closeSidebar(); exportBackup(); });
 document.getElementById('navRestore').addEventListener('click', function() { closeSidebar(); document.getElementById('fileInput').click(); });
+
 
 document.getElementById('fileInput').addEventListener('change', function(e) {
   var file = e.target.files[0];
