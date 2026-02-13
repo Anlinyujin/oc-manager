@@ -1323,14 +1323,27 @@ textarea.field-input.large { min-height: 120px; }
     display: none !important;
   }
 
-  /* 输入框撑满容器 */
-  input[type="text"],
-  input:not([type]),
-  input[type="number"],
-  textarea,
-  select {
-    width: 100%;
-    box-sizing: border-box;
+    /* 输入框撑满容器 */
+  .char-edit-body input[type="text"],
+  .char-edit-body input:not([type]),
+  .char-edit-body input[type="number"],
+  .char-edit-body textarea,
+  .char-edit-body select,
+  .note-edit-body input,
+  .note-edit-body textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 字段行也撑满 */
+  .field-row {
+    max-width: 100% !important;
+  }
+
+  /* section撑满 */
+  .section {
+    max-width: 100% !important;
   }
 
   /* 分组标题线撑满 */
