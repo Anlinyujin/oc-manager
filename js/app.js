@@ -112,32 +112,31 @@ function goBack() {
   }
 }
 
-// ===== 侧边栏 =====
+// ===== 侧边栏逻辑 (已修复) =====
 var menuBtn = document.getElementById('menuBtn');
 var sidebar = document.getElementById('sidebar');
 var sidebarOverlay = document.getElementById('sidebarOverlay');
 
+// 判断是否为PC端 (宽屏)
 function isPC() { return window.innerWidth >= 768; }
 
-function openSidebar() {
-  sidebar.classList.add('active');
-  if (!isPC()) { sidebarOverlay.classList.add('active'); }
+function openSidebar() { 
+  sidebar.classList.add('active'); 
+  sidebarOverlay.classList.add('active'); 
 }
 
-function closeSidebar() {
-  if (!isPC()) {
-    sidebar.classList.remove('active');
-    sidebarOverlay.classList.remove('active');
-  }
+function closeSidebar() { 
+  // 只有在非PC端（手机端）才真正关闭侧边栏
+  if (!isPC()) { 
+    sidebar.classList.remove('active'); 
+    sidebarOverlay.classList.remove('active'); 
+  } 
 }
 
-menuBtn.addEventListener('click', function() {
-  if (sidebar.classList.contains('active') && !isPC()) {
-    closeSidebar();
-  } else {
-    openSidebar();
-  }
+menuBtn.addEventListener('click', function() { 
+  sidebar.classList.contains('active') ? closeSidebar() : openSidebar(); 
 });
+
 sidebarOverlay.addEventListener('click', closeSidebar);
 
 document.getElementById('sidebarLyrics').addEventListener('click', function() { closeSidebar(); onLyricsClick(); });
@@ -147,7 +146,6 @@ document.getElementById('navTags').addEventListener('click', function() { closeS
 document.getElementById('navSettings').addEventListener('click', function() { closeSidebar(); navigateTo('settings'); });
 document.getElementById('navBackup').addEventListener('click', function() { closeSidebar(); exportBackup(); });
 document.getElementById('navRestore').addEventListener('click', function() { closeSidebar(); document.getElementById('fileInput').click(); });
-
 
 document.getElementById('fileInput').addEventListener('change', function(e) {
   var file = e.target.files[0];
@@ -212,6 +210,7 @@ function initHistoryGuard() {
   });
 }
 
+// 初始化流程
 loadData();
 initDarkMode();
 navigateTo('home');
