@@ -1398,6 +1398,75 @@ textarea.field-input.large { min-height: 120px; }
   .home-face {
     margin-left: 0;
   }
+
+  /* 人设卡编辑页 - 独立导航栏让位+内容撑满 */
+  .char-edit-body {
+    max-width: 680px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .char-edit-body input[type="text"],
+  .char-edit-body input:not([type]),
+  .char-edit-body textarea {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 笔记编辑页 - 内容撑满 */
+  .note-edit-body {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  /* 标签管理页限宽 */
+  #pageTagManager .page-content,
+  .tag-manager-content {
+    max-width: 680px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  /* 编辑页的独立导航栏（‹ 和 ★/▲）也要让位侧边栏 */
+  #pageCharEdit .note-edit-topnav,
+  #pageNoteEdit .note-edit-topnav {
+    left: 220px;
+    width: calc(100% - 220px);
+  }
+
+  /* 编辑页整个page也要让位 */
+  #pageCharEdit,
+  #pageNoteEdit {
+    margin-left: 0;
+  }
+
+  /* 导出预览页限宽 */
+  #pageCharPreview .page-content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  /* 笔记导出选项页限宽 */
+  #pageNoteExport .page-content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  /* 设置页限宽 */
+  #pageSettings .page-content {
+    max-width: 500px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 }
 
 /* ===== 夜间模式下PC端侧边栏边框 ===== */
