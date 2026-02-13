@@ -1394,3 +1394,389 @@ textarea.field-input.large { min-height: 120px; }
 .lyrics-close-btn {
   color: var(--text-secondary);
 }
+
+/* ===== 设置页 ===== */
+.settings-list {
+  padding: 20px;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.settings-label {
+  font-size: 16px;
+  color: #333;
+}
+
+.settings-toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.settings-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ddd;
+  border-radius: 26px;
+  transition: background-color 0.3s;
+}
+
+.toggle-slider:before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.settings-toggle input:checked + .toggle-slider {
+  background-color: #555;
+}
+
+.settings-toggle input:checked + .toggle-slider:before {
+  transform: translateX(22px);
+}
+
+/* ===== 夜间模式 ===== */
+body.dark-mode {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .topbar {
+  background: #1a1a1a;
+  border-bottom-color: #333;
+}
+
+body.dark-mode .topbar-title {
+  color: #e0e0e0;
+}
+
+body.dark-mode .hamburger span {
+  background: #e0e0e0;
+}
+
+body.dark-mode .sidebar {
+  background: #222;
+  border-right-color: #333;
+}
+
+body.dark-mode .sidebar-header {
+  color: #e0e0e0;
+  border-bottom-color: #333;
+}
+
+body.dark-mode .sidebar-item,
+body.dark-mode .sidebar-footer-item {
+  color: #ccc;
+}
+
+body.dark-mode .sidebar-item:active,
+body.dark-mode .sidebar-footer-item:active {
+  background: #333;
+}
+
+body.dark-mode .sidebar-footer {
+  border-top-color: #333;
+}
+
+body.dark-mode .page {
+  background: #1a1a1a;
+}
+
+body.dark-mode input[type="text"],
+body.dark-mode textarea,
+body.dark-mode select {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+body.dark-mode .char-group-header {
+  background: #222;
+  border-color: #444;
+}
+
+body.dark-mode .char-group-title {
+  color: #e0e0e0;
+}
+
+body.dark-mode .char-item {
+  border-bottom-color: #333;
+}
+
+body.dark-mode .char-item-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .char-item-info {
+  color: #888;
+}
+
+body.dark-mode .section-title {
+  color: #aaa;
+  border-bottom-color: #333;
+}
+
+body.dark-mode .field-label {
+  color: #999;
+}
+
+body.dark-mode .note-item {
+  border-bottom-color: #333;
+}
+
+body.dark-mode .note-item-title {
+  color: #e0e0e0;
+}
+
+body.dark-mode .note-item-preview {
+  color: #888;
+}
+
+body.dark-mode .note-tag {
+  background: #333;
+  color: #ccc;
+}
+
+body.dark-mode .note-edit-topnav {
+  background: #1a1a1a;
+  border-bottom-color: #333;
+}
+
+body.dark-mode .note-edit-topnav button {
+  color: #e0e0e0;
+}
+
+body.dark-mode .note-edit-title {
+  color: #e0e0e0;
+  border-bottom-color: #333;
+}
+
+body.dark-mode .note-edit-area {
+  color: #e0e0e0;
+}
+
+body.dark-mode .note-preview-clean {
+  color: #e0e0e0;
+}
+
+body.dark-mode .note-preview-clean blockquote {
+  border-left-color: #555;
+  color: #aaa;
+  background: #222;
+}
+
+body.dark-mode .note-preview-clean pre {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+body.dark-mode .note-preview-clean code {
+  background: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .note-preview-clean table {
+  border-color: #444;
+}
+
+body.dark-mode .note-preview-clean th {
+  background: #333;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+body.dark-mode .note-preview-clean td {
+  border-color: #444;
+}
+
+body.dark-mode .note-preview-clean hr {
+  border-color: #444;
+}
+
+body.dark-mode .note-preview-clean .collapsible-block {
+  background: #222;
+  border-color: #444;
+}
+
+body.dark-mode .md-toolbar {
+  background: #222;
+  border-top-color: #444;
+}
+
+body.dark-mode .md-toolbar button {
+  color: #ccc;
+}
+
+body.dark-mode .md-toolbar .md-divider {
+  background: #444;
+}
+
+body.dark-mode .md-popup {
+  background: #2a2a2a;
+  border-color: #444;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .md-popup div:active,
+body.dark-mode .md-popup button:active {
+  background: #444;
+}
+
+body.dark-mode .modal {
+  background: #2a2a2a;
+}
+
+body.dark-mode .modal-body {
+  color: #e0e0e0;
+}
+
+body.dark-mode .modal-actions button {
+  color: #e0e0e0;
+  border-top-color: #444;
+}
+
+body.dark-mode .toast {
+  background: #444;
+  color: #e0e0e0;
+}
+
+body.dark-mode .export-bottom-bar {
+  background: #222;
+  border-top-color: #444;
+}
+
+body.dark-mode .btn-add {
+  border-color: #555;
+  color: #999;
+}
+
+body.dark-mode .btn-add:active {
+  background: #333;
+}
+
+body.dark-mode .save-indicator {
+  color: #888;
+}
+
+body.dark-mode .home-face {
+  color: #555;
+}
+
+body.dark-mode .settings-item {
+  border-bottom-color: #333;
+}
+
+body.dark-mode .settings-label {
+  color: #e0e0e0;
+}
+
+body.dark-mode .toggle-slider {
+  background-color: #555;
+}
+
+body.dark-mode .settings-toggle input:checked + .toggle-slider {
+  background-color: #888;
+}
+
+body.dark-mode .char-actions-menu {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+body.dark-mode .char-actions-menu div {
+  color: #e0e0e0;
+}
+
+body.dark-mode .char-actions-menu div:active {
+  background: #444;
+}
+
+body.dark-mode .note-filter-modal .filter-section-title {
+  color: #aaa;
+}
+
+body.dark-mode .note-filter-modal .filter-tag {
+  background: #333;
+  color: #ccc;
+}
+
+body.dark-mode .note-filter-modal .filter-tag.selected {
+  background: #555;
+  color: #fff;
+}
+
+body.dark-mode .tag-section-title {
+  color: #aaa;
+  border-bottom-color: #333;
+}
+
+body.dark-mode .tag-item {
+  color: #e0e0e0;
+  border-bottom-color: #333;
+}
+
+body.dark-mode .lyrics-adjust-panel {
+  background: #2a2a2a;
+}
+
+body.dark-mode .lyrics-adjust-panel label {
+  color: #ccc;
+}
+
+body.dark-mode .export-preview-box {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+body.dark-mode .export-preview-box textarea {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+body.dark-mode .export-option-btn {
+  background: #333;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+body.dark-mode .export-option-btn:active {
+  background: #444;
+}
+
+body.dark-mode .rel-card {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+body.dark-mode .rel-card-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .rel-card-type {
+  color: #999;
+}
