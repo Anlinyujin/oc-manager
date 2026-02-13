@@ -1780,3 +1780,226 @@ body.dark-mode .rel-card-name {
 body.dark-mode .rel-card-type {
   color: #999;
 }
+
+/* 歌词面板夜间适配 */
+body.dark-mode .lyrics-adjust-panel {
+  background: #2a2a2a;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.4);
+}
+
+body.dark-mode .lyrics-slider-label {
+  color: #aaa;
+}
+
+body.dark-mode .lyrics-slider {
+  background: #444;
+}
+
+body.dark-mode .lyrics-slider::-webkit-slider-thumb {
+  background: #bbb;
+}
+
+body.dark-mode .lyrics-slider-value {
+  color: #aaa;
+}
+
+body.dark-mode .lyrics-color-selected {
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.4);
+}
+
+body.dark-mode .lyrics-action-btn {
+  background: #3a3a3a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .lyrics-action-btn:active {
+  background: #4a4a4a;
+}
+
+body.dark-mode .lyrics-close-btn {
+  color: #999;
+}
+
+/* 笔记编辑框去边框 */
+body.dark-mode .note-edit-area {
+  border-color: transparent;
+  background: #1a1a1a;
+}
+
+/* 紧凑导出模式文字 */
+body.dark-mode .toggle-label {
+  color: #ccc;
+}
+
+/* 导出/保存按钮 */
+body.dark-mode .btn-export,
+body.dark-mode .btn-save {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+body.dark-mode .btn-export:active,
+body.dark-mode .btn-save:active {
+  background: #3a3a3a;
+}
+
+/* 紧凑导出开关 */
+body.dark-mode .compact-toggle {
+  color: #ccc;
+}
+
+/* 全局边框分界线改灰 */
+body.dark-mode .char-group {
+  border-color: #444;
+}
+
+body.dark-mode .char-item {
+  border-color: #333;
+}
+
+body.dark-mode .note-edit-tags {
+  border-bottom-color: #333;
+}
+
+body.dark-mode .note-edit-title {
+  border-bottom-color: #333;
+}
+
+body.dark-mode .note-tag {
+  border-color: #555;
+}
+
+body.dark-mode .btn-add {
+  border-color: #444;
+  color: #888;
+}
+
+/* 新建班级虚线框 */
+body.dark-mode .btn-add-class {
+  border-color: #444;
+  color: #888;
+}
+
+/* 角色编辑页输入框边框改灰 */
+body.dark-mode .char-edit-body input[type="text"],
+body.dark-mode .char-edit-body textarea {
+  border-color: #333;
+  background: #222;
+}
+
+/* 人设卡编辑页分界线 */
+body.dark-mode .section-title {
+  border-bottom-color: #444;
+}
+
+body.dark-mode .field-label {
+  color: #888;
+}
+
+/* ===== 歌词调整面板固定底部 ===== */
+.lyrics-adjust-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 600;
+  background: #fff;
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  border-radius: 16px 16px 0 0;
+}
+
+.lyrics-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.lyrics-slider-label {
+  font-size: 13px;
+  color: #666;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.lyrics-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #ddd;
+  border-radius: 2px;
+  outline: none;
+}
+
+.lyrics-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #999;
+  cursor: pointer;
+}
+
+.lyrics-slider-value {
+  font-size: 12px;
+  color: #999;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lyrics-colors {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.lyrics-color-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.lyrics-color-btn:active {
+  transform: scale(0.9);
+}
+
+.lyrics-color-selected {
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
+}
+
+.lyrics-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.lyrics-action-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+  background: #f5f5f5;
+  color: #333;
+  text-align: center;
+}
+
+.lyrics-action-btn:active {
+  background: #e0e0e0;
+}
+
+.lyrics-close-btn {
+  background: #f0f0f0;
+  color: #999;
+}
