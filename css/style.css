@@ -1506,6 +1506,9 @@ body.dark-mode .page {
 }
 
 body.dark-mode input[type="text"],
+body.dark-mode input:not([type]),
+body.dark-mode input[type="number"],
+body.dark-mode input[type="search"],
 body.dark-mode textarea,
 body.dark-mode select {
   background: #2a2a2a;
