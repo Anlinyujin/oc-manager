@@ -1323,34 +1323,6 @@ textarea.field-input.large { min-height: 120px; }
     display: none !important;
   }
 
-    /* 输入框撑满容器 */
-  .char-edit-body input[type="text"],
-  .char-edit-body input:not([type]),
-  .char-edit-body input[type="number"],
-  .char-edit-body textarea,
-  .char-edit-body select,
-  .note-edit-body input,
-  .note-edit-body textarea {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  /* 字段行也撑满 */
-  .field-row {
-    max-width: 100% !important;
-  }
-
-  /* section撑满 */
-  .section {
-    max-width: 100% !important;
-  }
-
-  /* 分组标题线撑满 */
-  .section-title {
-    width: 100%;
-  }
-
   /* 主内容区左移 */
   #mainContent {
     margin-left: 240px;
@@ -1374,7 +1346,7 @@ textarea.field-input.large { min-height: 120px; }
     padding: 20px 40px;
   }
 
-  /* ===== 人设卡编辑页 ===== */
+  /* ===== 编辑页导航栏 ===== */
   .note-edit-topnav {
     left: 240px;
     width: calc(100% - 240px);
@@ -1386,13 +1358,29 @@ textarea.field-input.large { min-height: 120px; }
     padding: 12px 20px;
   }
 
-  .char-edit-body {
-    max-width: none;
+  /* ===== 人设卡编辑页 & 笔记编辑页 ===== */
+  .char-edit-body,
+  .note-edit-body {
+    max-width: none !important;
     margin: 0 auto;
     padding: 20px 40px;
   }
 
+  /* 输入框撑满容器 */
+  input[type="text"],
+  input:not([type]),
+  input[type="number"],
+  textarea,
+  select {
+    width: 100% !important;
+    box-sizing: border-box;
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+
+  /* 分组标题线撑满 */
   .section-title {
+    width: 100%;
     font-size: 16px;
   }
 
@@ -1400,21 +1388,7 @@ textarea.field-input.large { min-height: 120px; }
     font-size: 15px;
   }
 
-  input[type="text"],
-  input:not([type]),
-  textarea,
-  select {
-    font-size: 16px;
-    padding: 10px 12px;
-  }
-
-  /* ===== 笔记编辑页 ===== */
-  .note-edit-body {
-    max-width: none;
-    margin: 0 auto;
-    padding: 20px 40px;
-  }
-
+  /* ===== 笔记编辑页特有 ===== */
   .note-title-clean {
     font-size: 22px;
   }
@@ -1424,7 +1398,6 @@ textarea.field-input.large { min-height: 120px; }
     line-height: 1.8;
   }
 
-  /* 笔记预览 */
   .note-preview-clean {
     font-size: 16px;
     line-height: 1.8;
@@ -1579,34 +1552,24 @@ textarea.field-input.large { min-height: 120px; }
 
 /* ===== 更大屏幕（1200px+）进一步放宽 ===== */
 @media (min-width: 1200px) {
-  /* 人设卡列表、标签管理等页面 */
   .page-content {
-    max-width: 1200px; /* 从900改到1200 */
+    max-width: 1200px;
   }
 
-    /* 人设卡编辑页 */
-  .char-edit-body {
-    max-width: none;
-    padding: 20px 60px;
-  }
-
-  /* 笔记编辑页 */
+  .char-edit-body,
   .note-edit-body {
-    max-width: none;
+    max-width: none !important;
     padding: 20px 60px;
   }
 
-  /* 笔记标题字号再大一点 */
   .note-title-clean {
     font-size: 28px;
   }
 
-  /* 设置页 */
   .settings-page {
     max-width: 800px;
   }
-  
-  /* 弹窗再宽一点 */
+
   .modal {
     max-width: 600px;
   }
