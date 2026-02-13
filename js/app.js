@@ -76,6 +76,11 @@ function navigateTo(page, data) {
       title.textContent = '标签管理'; title.classList.add('visible');
       renderTagManager();
       break;
+    case 'settings':
+      document.getElementById('pageSettings').classList.add('active');
+      title.textContent = '设置'; title.classList.add('visible');
+      renderSettings();
+      break;
   }
   window.scrollTo(0, 0);
 }
@@ -102,6 +107,7 @@ function goBack() {
     case 'noteEdit': navigateTo('noteList'); break;
     case 'noteList': navigateTo('home'); break;
     case 'tagManager': navigateTo('home'); break;
+    case 'settings': navigateTo('home'); break;
     case 'home': break;
   }
 }
@@ -121,6 +127,7 @@ document.getElementById('sidebarLyrics').addEventListener('click', function() { 
 document.getElementById('navCharCards').addEventListener('click', function() { closeSidebar(); navigateTo('charList'); });
 document.getElementById('navNotes').addEventListener('click', function() { closeSidebar(); navigateTo('noteList'); });
 document.getElementById('navTags').addEventListener('click', function() { closeSidebar(); navigateTo('tagManager'); });
+document.getElementById('navSettings').addEventListener('click', function() { closeSidebar(); navigateTo('settings'); });
 document.getElementById('navBackup').addEventListener('click', function() { closeSidebar(); exportBackup(); });
 document.getElementById('navRestore').addEventListener('click', function() { closeSidebar(); document.getElementById('fileInput').click(); });
 
@@ -188,6 +195,7 @@ function initHistoryGuard() {
 }
 
 loadData();
+initDarkMode();
 navigateTo('home');
 initHistoryGuard();
 initLyrics();
