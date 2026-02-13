@@ -1572,12 +1572,8 @@ body.dark-mode .note-edit-topnav button {
   color: #e0e0e0;
 }
 
-body.dark-mode .note-edit-title,
-body.dark-mode .note-title-clean {
+body.dark-mode .note-edit-title {
   color: #e0e0e0;
-  border-bottom-color: #333;
-  background: transparent;
-  border-color: transparent;
   border-bottom-color: #333;
 }
 
@@ -1979,4 +1975,11 @@ body.dark-mode .modal-btn + .modal-btn {
 
 body.dark-mode .modal-actions {
   border-top-color: #444;
+}
+
+/* 笔记标题保持透明背景 */
+body.dark-mode .note-title-clean {
+  background: transparent !important;
+  border-color: transparent !important;
+  border-bottom-color: #333 !important;
 }
