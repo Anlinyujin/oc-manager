@@ -1323,6 +1323,21 @@ textarea.field-input.large { min-height: 120px; }
     display: none !important;
   }
 
+  /* 输入框撑满容器 */
+  input[type="text"],
+  input:not([type]),
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 分组标题线撑满 */
+  .section-title {
+    width: 100%;
+  }
+
   /* 主内容区左移 */
   #mainContent {
     margin-left: 240px;
@@ -1359,7 +1374,7 @@ textarea.field-input.large { min-height: 120px; }
   }
 
   .char-edit-body {
-    max-width: 800px;
+    max-width: none;
     margin: 0 auto;
     padding: 20px 40px;
   }
@@ -1382,7 +1397,7 @@ textarea.field-input.large { min-height: 120px; }
 
   /* ===== 笔记编辑页 ===== */
   .note-edit-body {
-    max-width: 800px;
+    max-width: none;
     margin: 0 auto;
     padding: 20px 40px;
   }
@@ -1556,14 +1571,16 @@ textarea.field-input.large { min-height: 120px; }
     max-width: 1200px; /* 从900改到1200 */
   }
 
-  /* 人设卡编辑页 */
+    /* 人设卡编辑页 */
   .char-edit-body {
-    max-width: 1100px; /* 稍微窄一点点，方便阅读 */
+    max-width: none;
+    padding: 20px 60px;
   }
 
-  /* 笔记编辑页 - 像Word一样宽 */
+  /* 笔记编辑页 */
   .note-edit-body {
-    max-width: 1400px; 
+    max-width: none;
+    padding: 20px 60px;
   }
 
   /* 笔记标题字号再大一点 */
