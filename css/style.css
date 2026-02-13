@@ -1288,12 +1288,28 @@ textarea.field-input.large { min-height: 120px; }
 
 /* ===== PC端适配（768px以上） ===== */
 @media (min-width: 768px) {
+  /* PC端整体字号放大 */
+  html {
+    font-size: 17px;
+  }
+
   /* 侧边栏常驻 */
   .sidebar {
     transform: translateX(0) !important;
-    width: 220px;
+    width: 240px;
     box-shadow: none;
     border-right: 1px solid #eee;
+  }
+
+  .sidebar-header {
+    font-size: 20px;
+    padding: 20px 24px;
+  }
+
+  .sidebar-item,
+  .sidebar-footer-item {
+    font-size: 16px;
+    padding: 14px 24px;
   }
 
   /* 遮罩层永远隐藏 */
@@ -1306,170 +1322,246 @@ textarea.field-input.large { min-height: 120px; }
     display: none !important;
   }
 
-  /* 主内容区左移，给侧边栏腾位置 */
+  /* 主内容区左移 */
   #mainContent {
-    margin-left: 220px;
+    margin-left: 240px;
   }
 
-  /* topbar也要让出侧边栏的宽度 */
+  /* topbar让位 */
   .topbar {
-    left: 220px;
-    width: calc(100% - 220px);
+    left: 240px;
+    width: calc(100% - 240px);
+    height: 56px;
   }
 
-  /* 笔记编辑页的独立导航栏也让位 */
-  .note-edit-topnav {
-    left: 220px;
-    width: calc(100% - 220px);
+  .topbar-title {
+    font-size: 18px;
   }
 
   /* 内容限宽居中 */
   .page-content {
-    max-width: 680px;
+    max-width: 800px;
     margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 20px 40px;
   }
 
-  /* 笔记编辑区限宽 */
-  .note-edit-body {
-    max-width: 720px;
-    margin: 0 auto;
+  /* ===== 人设卡编辑页 ===== */
+  .note-edit-topnav {
+    left: 240px;
+    width: calc(100% - 240px);
+    height: 56px;
   }
 
-  /* 角色编辑区限宽 */
+  .note-edit-topnav button {
+    font-size: 20px;
+    padding: 12px 20px;
+  }
+
   .char-edit-body {
-    max-width: 680px;
+    max-width: 800px;
     margin: 0 auto;
+    padding: 20px 40px;
   }
 
-  /* 导出底部栏让位 */
-  .export-bottom-bar {
-    left: 220px;
-    width: calc(100% - 220px);
+  .section-title {
+    font-size: 16px;
   }
 
-  /* MD工具栏让位 */
+  .field-label {
+    font-size: 15px;
+  }
+
+  input[type="text"],
+  input:not([type]),
+  textarea,
+  select {
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+
+  /* ===== 笔记编辑页 ===== */
+  .note-edit-body {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 40px;
+  }
+
+  .note-title-clean {
+    font-size: 22px;
+  }
+
+  .note-content-clean {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
+  /* 笔记预览 */
+  .note-preview-clean {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
+  /* ===== 标签管理页 ===== */
+  .tag-section-title {
+    font-size: 16px;
+  }
+
+  .tag-item {
+    font-size: 15px;
+    padding: 12px 0;
+  }
+
+  .btn-add {
+    font-size: 15px;
+    padding: 8px 16px;
+  }
+
+  /* ===== 人设卡列表页 ===== */
+  .char-group-header {
+    padding: 14px 16px;
+  }
+
+  .char-group-title {
+    font-size: 17px;
+  }
+
+  .char-item-name {
+    font-size: 16px;
+  }
+
+  .action-btn {
+    font-size: 16px;
+    padding: 12px 0;
+  }
+
+  /* ===== 笔记列表页 ===== */
+  .note-item {
+    padding: 14px 0;
+  }
+
+  .note-item-title {
+    font-size: 16px;
+  }
+
+  .note-item-preview {
+    font-size: 14px;
+  }
+
+  /* ===== 设置页 ===== */
+  .settings-page {
+    max-width: 600px;
+  }
+
+  .settings-label {
+    font-size: 16px;
+  }
+
+  /* ===== MD工具栏 ===== */
   .md-toolbar {
-    left: 220px;
-    width: calc(100% - 220px);
+    left: 240px;
+    width: calc(100% - 240px);
+    padding: 8px 12px;
   }
 
-  /* MD弹窗居中基于内容区 */
+  .md-toolbar button {
+    font-size: 16px;
+    min-width: 36px;
+    height: 36px;
+  }
+
   .md-popup {
-    left: calc(220px + 50%) !important;
+    left: calc(240px + 50%) !important;
     transform: translateX(-50%) !important;
+    font-size: 15px;
   }
 
-  /* 弹窗(modal)限宽 */
+  /* ===== 导出底部栏 ===== */
+  .export-bottom-bar {
+    left: 240px;
+    width: calc(100% - 240px);
+  }
+
+  .export-confirm-btn {
+    font-size: 16px;
+  }
+
+  /* ===== 弹窗 ===== */
   .modal-overlay {
-    padding-left: 220px;
+    padding-left: 240px;
   }
 
   .modal {
-    max-width: 420px;
+    max-width: 460px;
   }
 
-  /* 歌词色块让位 */
+  .modal-body {
+    font-size: 16px;
+    padding: 24px;
+  }
+
+  .modal-actions button {
+    font-size: 16px;
+    padding: 14px;
+  }
+
+  /* ===== 歌词 ===== */
   .lyrics-block {
-    margin-left: 220px;
-    width: calc(100% - 220px) !important;
-    max-width: none;
+    margin-left: 240px;
+    width: calc(100% - 240px) !important;
   }
 
-  /* 歌词调整面板让位 */
   .lyrics-adjust-panel {
-    left: 220px;
-    width: calc(100% - 220px);
+    left: 240px;
+    width: calc(100% - 240px);
   }
 
-  /* toast居中基于内容区 */
+  /* ===== Toast ===== */
   .toast {
-    left: calc(220px + (100% - 220px) / 2);
+    left: calc(240px + (100% - 240px) / 2);
     transform: translateX(-50%);
+    font-size: 15px;
   }
 
-  /* 设置页限宽 */
-  .settings-page {
-    max-width: 500px;
-  }
-
-  /* 首页表情居中于内容区 */
+  /* ===== 首页 ===== */
   .home-face {
-    margin-left: 0;
+    font-size: 48px;
   }
 
-  /* 人设卡编辑页 - 独立导航栏让位+内容撑满 */
-  .char-edit-body {
-    max-width: 680px;
-    margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
+  /* ===== 关系卡片 ===== */
+  .rel-card {
+    padding: 16px;
   }
 
-  .char-edit-body input[type="text"],
-  .char-edit-body input:not([type]),
-  .char-edit-body textarea {
-    width: 100%;
-    box-sizing: border-box;
+  .rel-card-name {
+    font-size: 16px;
   }
 
-  /* 笔记编辑页 - 内容撑满 */
-  .note-edit-body {
-    max-width: 720px;
-    margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
+  /* ===== 导出预览 ===== */
+  .export-preview-box {
+    font-size: 15px;
   }
 
-  /* 标签管理页限宽 */
-  #pageTagManager .page-content,
-  .tag-manager-content {
-    max-width: 680px;
-    margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  /* 编辑页的独立导航栏（‹ 和 ★/▲）也要让位侧边栏 */
-  #pageCharEdit .note-edit-topnav,
-  #pageNoteEdit .note-edit-topnav {
-    left: 220px;
-    width: calc(100% - 220px);
-  }
-
-  /* 编辑页整个page也要让位 */
-  #pageCharEdit,
-  #pageNoteEdit {
-    margin-left: 0;
-  }
-
-  /* 导出预览页限宽 */
-  #pageCharPreview .page-content {
-    max-width: 720px;
-    margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  /* 笔记导出选项页限宽 */
-  #pageNoteExport .page-content {
-    max-width: 720px;
-    margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  /* 设置页限宽 */
-  #pageSettings .page-content {
-    max-width: 500px;
-    margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
+  .preview-btn,
+  .export-option-btn {
+    font-size: 15px;
+    padding: 12px 20px;
   }
 }
 
-/* ===== 夜间模式下PC端侧边栏边框 ===== */
+/* ===== 更大屏幕（1200px+）进一步放宽 ===== */
+@media (min-width: 1200px) {
+  .page-content,
+  .note-edit-body,
+  .char-edit-body {
+    max-width: 900px;
+  }
+
+  .settings-page {
+    max-width: 680px;
+  }
+}
+
+/* ===== 夜间模式下PC端 ===== */
 @media (min-width: 768px) {
   body.dark-mode .sidebar {
     border-right-color: #333;
