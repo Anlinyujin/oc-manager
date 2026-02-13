@@ -1358,22 +1358,44 @@ textarea.field-input.large { min-height: 120px; }
     padding: 12px 20px;
   }
 
-  /* ===== 人设卡编辑页 & 笔记编辑页 ===== */
-  .char-edit-body,
-  .note-edit-body {
-    max-width: none !important;
-    margin: 0 auto;
-    padding: 20px 40px;
+  /* ===== 关键修复：打通所有容器宽度 ===== */
+  
+  /* 1. 编辑页最外层容器撑满 */
+  .note-edit-page {
+    width: 100% !important;
+    align-items: stretch !important; /* 禁止居中对齐，强制拉伸 */
   }
 
-  /* 输入框撑满容器 */
+  /* 2. 内容主体容器撑满 */
+  .char-edit-body,
+  .note-edit-body {
+    width: 100% !important; /* 强制占满宽度 */
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 20px 60px !important;
+    box-sizing: border-box !important;
+    align-items: stretch !important; /* 内部元素拉伸 */
+  }
+
+  /* 3. 字段行容器撑满 */
+  .section, 
+  .field-row,
+  .note-tags-clean {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* 4. 输入框撑满 */
   input[type="text"],
   input:not([type]),
   input[type="number"],
   textarea,
-  select {
+  select,
+  .note-title-clean,
+  .note-content-clean {
     width: 100% !important;
-    box-sizing: border-box;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     font-size: 16px;
     padding: 10px 12px;
   }
@@ -1401,6 +1423,7 @@ textarea.field-input.large { min-height: 120px; }
   .note-preview-clean {
     font-size: 16px;
     line-height: 1.8;
+    width: 100%;
   }
 
   /* ===== 标签管理页 ===== */
@@ -1556,22 +1579,16 @@ textarea.field-input.large { min-height: 120px; }
     max-width: 1200px;
   }
 
-  .char-edit-body,
-  .note-edit-body {
-    max-width: none !important;
-    padding: 20px 60px;
-  }
-
-  .note-title-clean {
-    font-size: 28px;
-  }
-
   .settings-page {
     max-width: 800px;
   }
 
   .modal {
     max-width: 600px;
+  }
+  
+  .note-title-clean {
+    font-size: 28px;
   }
 }
 
