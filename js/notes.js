@@ -791,3 +791,453 @@ function insertWrap(ta, prefix, suffix, placeholder) {
     ta.selectionStart = start + prefix.length;
     ta.selectionEnd = end + prefix.length;
   }
+  else {
+    ta.value = before + prefix + placeholder + suffix + after;
+    ta.selectionStart = start + prefix.length;
+    ta.selectionEnd = start + prefix.length + placeholder.length;
+  }
+}
+
+// 插入行前缀
+function insertLinePrefix(ta, prefix) {
+  var start = ta.selectionStart;
+  var before = ta.value.substring(0, start);
+  var after = ta.value.substring(start);
+  var lineStart = before.lastIndexOf('\n') + 1;
+  var linePrefix = before.substring(lineStart);
+
+  if (linePrefix === '' && (before.length === 0 || before.charAt(before.length - 1) === '\n')) {
+    ta.value = before + prefix + after;
+    ta.selectionStart = ta.selectionEnd = start + prefix.length;
+  } else {
+    ta.value = before + '\n' + prefix + after;
+    ta.selectionStart = ta.selectionEnd = start + 1 + prefix.length;
+  }
+}
+
+// 在光标处插入文本
+function insertAtCursor(ta, text) {
+  var start = ta.selectionStart;
+  var before = ta.value.substring(0, start);
+  var after = ta.value.substring(ta.selectionEnd);
+  ta.value = before + text + after;
+  ta.selectionStart = ta.selectionEnd = start + text.length;
+}
+
+// 插入链接
+function insertLink(ta) {
+  var start = ta.selectionStart;
+  var end = ta.selectionEnd;
+  var selected = ta.value.substring(start, end);
+  var before = ta.value.substring(0, start);
+  var after = ta.value.substring(end);
+
+  if (selected) {
+    ta.value = before + '[' + selected + '](url)' + after;
+    ta.selectionStart = before.length + selected.length + 3;
+    ta.selectionEnd = before.length + selected.length + 6;
+  } else {
+    ta.value = before + '[链接文字](url)' + after;
+    ta.selectionStart = before.length + 1;
+    ta.selectionEnd = before.length + 5;
+  }
+  ta.dispatchEvent(new Event('input'));
+  ta.focus();
+}
+
+// ========================================
+// 工具栏弹出面板
+// ========================================
+
+function closeMdPopup() {
+  if (mdPopupEl) mdPopupEl.classList.remove('visible');
+}
+
+// 弹窗定位：固定在工具栏上方居中
+function positionPopup() {
+  var popup = mdPopupEl;
+  var toolbar = document.getElementById('mdToolbar');
+  if (!toolbar || !popup) return;
+
+  var toolbarRect = toolbar.getBoundingClientRect();
+
+  popup.style.visibility = 'hidden';
+  popup.style.display = 'block';
+  popup.classList.add('visible');
+
+  var popupWidth = popup.offsetWidth;
+  var left = (window.innerWidth - popupWidth) / 2;
+  if (left < 10) left = 10;
+
+  var bottom = (window.innerHeight - toolbarRect.top) + 8;
+
+  popup.style.left = left + 'px';
+  popup.style.right = '';
+  popup.style.bottom = bottom + 'px';
+  popup.style.top = '';
+  popup.style.visibility = '';
+  popup.style.display = '';
+}
+
+// 标题选择弹窗
+function showHeadingPopup() {
+  var levels = [
+    { l: 1, t: '大标题' },
+    { l: 2, t: '中标题' },
+    { l: 3, t: '小标题' },
+    { l: 4, t: '更小标题' }
+  ];
+  var html = '';
+  for (var i = 0; i < levels.length; i++) {
+    html += '<div class="md-popup-item" data-hlevel="' + levels[i].l + '">H' + levels[i].l + '  ' + levels[i].t + '</div>';
+  }
+  mdPopupEl.innerHTML = html;
+  positionPopup();
+
+  var items = mdPopupEl.querySelectorAll('[data-hlevel]');
+  for (var j = 0; j < items.length; j++) {
+    items[j].addEventListener('click', function() {
+      var level = parseInt(this.dataset.hlevel);
+      var prefix = '';
+      for (var k = 0; k < level; k++) prefix += '#';
+      prefix += ' ';
+      insertLinePrefix(currentNoteTextarea, prefix);
+      currentNoteTextarea.dispatchEvent(new Event('input'));
+      currentNoteTextarea.focus();
+      closeMdPopup();
+    });
+  }
+}
+
+// 代码选择弹窗
+function showCodePopup() {
+  var html = '';
+  html += '<div class="md-popup-item" data-ctype="inline">行内代码 `code`</div>';
+  html += '<div class="md-popup-item" data-ctype="block">代码块 ```</div>';
+  mdPopupEl.innerHTML = html;
+  positionPopup();
+
+  var items = mdPopupEl.querySelectorAll('[data-ctype]');
+  for (var j = 0; j < items.length; j++) {
+    items[j].addEventListener('click', function() {
+      var type = this.dataset.ctype;
+      if (type === 'inline') {
+        insertWrap(currentNoteTextarea, '`', '`', '代码');
+      } else {
+        insertAtCursor(currentNoteTextarea, '\n```\n代码内容\n```\n');
+      }
+      currentNoteTextarea.dispatchEvent(new Event('input'));
+      currentNoteTextarea.focus();
+      closeMdPopup();
+    });
+  }
+}
+
+// 颜色选择弹窗
+function showColorPopup() {
+  var colors = [
+    { name: '红', value: 'red' },
+    { name: '橙', value: 'orange' },
+    { name: '黄', value: 'goldenrod' },
+    { name: '绿', value: 'green' },
+    { name: '蓝', value: 'blue' },
+    { name: '紫', value: 'purple' },
+    { name: '粉', value: 'hotpink' },
+    { name: '灰', value: 'gray' }
+  ];
+  var html = '<div class="md-popup-colors">';
+  for (var i = 0; i < colors.length; i++) {
+    html += '<div class="md-color-btn" style="background:' + colors[i].value + 
+            '" data-color="' + colors[i].value + '" title="' + colors[i].name + '"></div>';
+  }
+  html += '</div>';
+  mdPopupEl.innerHTML = html;
+  positionPopup();
+
+  var btns = mdPopupEl.querySelectorAll('[data-color]');
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].addEventListener('click', function() {
+      var color = this.dataset.color;
+      insertWrap(currentNoteTextarea, '{' + color + '}(', ')', '彩色文字');
+      currentNoteTextarea.dispatchEvent(new Event('input'));
+      currentNoteTextarea.focus();
+      closeMdPopup();
+    });
+  }
+}
+
+// 表格选择弹窗
+function showTablePopup() {
+  var html = '<div class="md-popup-table">';
+  html += '<div class="md-popup-table-label">列数</div>';
+  html += '<div class="md-popup-table-row" id="tableColRow">';
+  for (var c = 2; c <= 5; c++) {
+    html += '<div class="md-popup-table-num' + (c === 3 ? ' selected' : '') + '" data-col="' + c + '">' + c + '</div>';
+  }
+  html += '</div>';
+  html += '<div class="md-popup-table-label">行数（不含表头）</div>';
+  html += '<div class="md-popup-table-row" id="tableRowRow">';
+  for (var r = 1; r <= 5; r++) {
+    html += '<div class="md-popup-table-num' + (r === 2 ? ' selected' : '') + '" data-row="' + r + '">' + r + '</div>';
+  }
+  html += '</div>';
+  html += '<button class="md-popup-insert" id="tableInsertBtn">插入表格</button>';
+  html += '</div>';
+  mdPopupEl.innerHTML = html;
+  positionPopup();
+
+  var selectedCol = 3, selectedRow = 2;
+
+  var colBtns = mdPopupEl.querySelectorAll('[data-col]');
+  for (var i = 0; i < colBtns.length; i++) {
+    colBtns[i].addEventListener('click', function() {
+      selectedCol = parseInt(this.dataset.col);
+      for (var k = 0; k < colBtns.length; k++) colBtns[k].classList.remove('selected');
+      this.classList.add('selected');
+    });
+  }
+
+  var rowBtns = mdPopupEl.querySelectorAll('[data-row]');
+  for (var j = 0; j < rowBtns.length; j++) {
+    rowBtns[j].addEventListener('click', function() {
+      selectedRow = parseInt(this.dataset.row);
+      for (var k = 0; k < rowBtns.length; k++) rowBtns[k].classList.remove('selected');
+      this.classList.add('selected');
+    });
+  }
+
+  document.getElementById('tableInsertBtn').addEventListener('click', function() {
+    var table = '\n|';
+    for (var c2 = 0; c2 < selectedCol; c2++) table += ' 标题 |';
+    table += '\n|';
+    for (var c3 = 0; c3 < selectedCol; c3++) table += '------|';
+    table += '\n';
+    for (var r2 = 0; r2 < selectedRow; r2++) {
+      table += '|';
+      for (var c4 = 0; c4 < selectedCol; c4++) table += '  |';
+      table += '\n';
+    }
+    insertAtCursor(currentNoteTextarea, table);
+    currentNoteTextarea.dispatchEvent(new Event('input'));
+    currentNoteTextarea.focus();
+    closeMdPopup();
+  });
+}
+
+// 点击空白处关闭弹窗
+document.addEventListener('click', function(e) {
+  if (mdPopupEl && mdPopupEl.classList.contains('visible')) {
+    if (!mdPopupEl.contains(e.target) && !e.target.classList.contains('md-tool-btn')) {
+      closeMdPopup();
+    }
+  }
+});
+
+// ========================================
+// 标签选择弹窗（笔记编辑页用）
+// ========================================
+
+function showTagSelectModal(note, editData) {
+  var tags = getAllTags();
+  var overlay = document.getElementById('modalOverlay');
+  var body = document.getElementById('modalBody');
+  var actions = document.getElementById('modalActions');
+  var activeTab = 'characters';
+
+  function render() {
+    var html = '<div class="tag-select-tabs">';
+    html += '<div class="tag-select-tab ' + (activeTab === 'characters' ? 'active' : '') + '" data-stab="characters">角色</div>';
+    html += '<div class="tag-select-tab ' + (activeTab === 'cp' ? 'active' : '') + '" data-stab="cp">CP</div>';
+    html += '<div class="tag-select-tab ' + (activeTab === 'custom' ? 'active' : '') + '" data-stab="custom">其他</div>';
+    html += '</div><div class="tag-select-body">';
+
+    if (activeTab === 'characters') {
+      html += renderTagSelectCharacters(note);
+    } else if (activeTab === 'cp') {
+      html += renderTagSelectList(tags.cp, note, '暂无CP标签，请在标签管理中添加');
+    } else {
+      html += renderTagSelectList(tags.custom, note, '暂无自定义标签，请在标签管理中添加');
+    }
+
+    html += '</div>';
+    body.innerHTML = html;
+    actions.innerHTML = '<button class="modal-btn primary" id="tagSelectDone">完成</button>';
+    actions.style.display = '';
+
+    bindTagSelectEvents(note, editData, overlay, render);
+  }
+
+  overlay.classList.add('active');
+  render();
+}
+
+// 渲染角色标签列表
+function renderTagSelectCharacters(note) {
+  var html = '';
+  for (var i = 0; i < appData.classes.length; i++) {
+    var cls = appData.classes[i];
+    if (cls.characters.length === 0) continue;
+    html += '<div class="tag-select-group">';
+    html += '<div class="tag-select-group-header">';
+    html += '<svg class="tag-select-group-arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">';
+    html += '<polyline points="6,4 12,10 6,16"/></svg>' + escapeHtml(cls.name) + '</div>';
+    html += '<div class="tag-select-items">';
+    for (var j = 0; j < cls.characters.length; j++) {
+      var ch = cls.characters[j];
+      if (!ch.name) continue;
+      var sel = (note.tags && note.tags.indexOf(ch.name) >= 0) ? 'selected' : '';
+      html += '<div class="tag-select-chip ' + sel + '" data-stag="' + escapeHtml(ch.name) + '">' + 
+              escapeHtml(ch.name) + '</div>';
+    }
+    html += '</div></div>';
+  }
+  return html;
+}
+
+// 渲染CP/自定义标签列表
+function renderTagSelectList(tagList, note, emptyMsg) {
+  if (tagList.length === 0) {
+    return '<div style="text-align:center; color:var(--text-secondary); padding:20px;">' + emptyMsg + '</div>';
+  }
+  var html = '<div class="tag-select-items" style="padding:4px 0;">';
+  for (var i = 0; i < tagList.length; i++) {
+    var sel = (note.tags && note.tags.indexOf(tagList[i]) >= 0) ? 'selected' : '';
+    html += '<div class="tag-select-chip ' + sel + '" data-stag="' + escapeHtml(tagList[i]) + '">' + 
+            escapeHtml(tagList[i]) + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// 绑定标签选择事件
+function bindTagSelectEvents(note, editData, overlay, render) {
+  var body = document.getElementById('modalBody');
+
+  // Tab切换
+  var tabEls = body.querySelectorAll('[data-stab]');
+  for (var i = 0; i < tabEls.length; i++) {
+    tabEls[i].addEventListener('click', function() {
+      var activeTab = this.dataset.stab;
+      // 需要更新外层变量，用闭包
+      var tabs = body.querySelectorAll('[data-stab]');
+      for (var t = 0; t < tabs.length; t++) {
+        tabs[t].classList.toggle('active', tabs[t].dataset.stab === activeTab);
+      }
+      // 重新渲染
+      render();
+    });
+  }
+
+  // 标签点击
+  var chipEls = body.querySelectorAll('[data-stag]');
+  for (var j = 0; j < chipEls.length; j++) {
+    chipEls[j].addEventListener('click', function() {
+      var tag = this.dataset.stag;
+      if (!note.tags) note.tags = [];
+      var idx = note.tags.indexOf(tag);
+      if (idx >= 0) note.tags.splice(idx, 1);
+      else note.tags.push(tag);
+      triggerAutoSave();
+      render();
+    });
+  }
+
+  // 分组折叠
+  var groupHeaders = body.querySelectorAll('.tag-select-group-header');
+  for (var k = 0; k < groupHeaders.length; k++) {
+    groupHeaders[k].addEventListener('click', function() {
+      var items = this.nextElementSibling;
+      var arrow = this.querySelector('.tag-select-group-arrow');
+      if (items.style.display === 'none') {
+        items.style.display = '';
+        if (arrow) arrow.classList.remove('collapsed');
+      } else {
+        items.style.display = 'none';
+        if (arrow) arrow.classList.add('collapsed');
+      }
+    });
+  }
+
+  // 完成按钮
+  document.getElementById('tagSelectDone').addEventListener('click', function() {
+    overlay.classList.remove('active');
+    renderNoteEdit(editData);
+  });
+}
+
+// ========================================
+// 笔记导出
+// ========================================
+
+function showNoteExportOptions() {
+  if (noteExportSelection.length === 0) {
+    showToast('请至少选择一条笔记');
+    return;
+  }
+
+  // 收集选中的笔记
+  var notes = [];
+  for (var i = 0; i < noteExportSelection.length; i++) {
+    var n = findNote(noteExportSelection[i]);
+    if (n) notes.push(n);
+  }
+
+  // 拼接文本
+  var text = '';
+  for (var j = 0; j < notes.length; j++) {
+    if (j > 0) text += '\n\n---\n\n';
+    if (notes[j].title) text += '# ' + notes[j].title + '\n\n';
+    text += notes[j].content || '';
+  }
+
+  // 退出导出模式
+  noteExportMode = false;
+  noteExportSelection = [];
+  document.getElementById('exportBottomBar').classList.remove('visible');
+
+  // 渲染导出预览页
+  var page = document.getElementById('pageNoteList');
+  var html = '<div class="page-content">';
+  html += '<div class="preview-topbar">';
+  html += '<button class="back-btn" id="noteExportBack">← 返回</button>';
+  html += '<div class="note-export-actions">';
+  html += '<button class="preview-btn" id="noteExportCopy">复制</button>';
+  html += '<button class="preview-btn" id="noteExportTxt">TXT</button>';
+  html += '</div></div>';
+  html += '<textarea class="preview-textarea" id="noteExportText">' + escapeHtml(text) + '</textarea>';
+  html += '</div>';
+  page.innerHTML = html;
+
+  bindNoteExportEvents();
+}
+
+// 绑定导出页事件
+function bindNoteExportEvents() {
+  document.getElementById('noteExportBack').addEventListener('click', function() {
+    renderNoteList();
+  });
+
+  document.getElementById('noteExportCopy').addEventListener('click', function() {
+    var text = document.getElementById('noteExportText').value;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('已复制');
+      });
+    } else {
+      document.getElementById('noteExportText').select();
+      document.execCommand('copy');
+      showToast('已复制');
+    }
+  });
+
+  document.getElementById('noteExportTxt').addEventListener('click', function() {
+    var blob = new Blob([document.getElementById('noteExportText').value], {
+      type: 'text/plain;charset=utf-8'
+    });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '笔记导出.txt';
+    a.click();
+    showToast('已下载');
+  });
+}
