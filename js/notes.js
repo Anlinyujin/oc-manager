@@ -1064,7 +1064,47 @@ function showTagSelectModal(note, editData) {
     actions.innerHTML = '<button class="modal-btn primary" id="tagSelectDone">完成</button>';
     actions.style.display = '';
 
-    bindTagSelectEvents(note, editData, overlay, render);
+    // 绑定事件（闭包内直接处理）
+    var tabEls = body.querySelectorAll('[data-stab]');
+    for (var i = 0; i < tabEls.length; i++) {
+      tabEls[i].addEventListener('click', function() {
+        activeTab = this.dataset.stab;
+        render();
+      });
+    }
+
+    var chipEls = body.querySelectorAll('[data-stag]');
+    for (var j = 0; j < chipEls.length; j++) {
+      chipEls[j].addEventListener('click', function() {
+        var tag = this.dataset.stag;
+        if (!note.tags) note.tags = [];
+        var idx = note.tags.indexOf(tag);
+        if (idx >= 0) note.tags.splice(idx, 1);
+        else note.tags.push(tag);
+        triggerAutoSave();
+        render();
+      });
+    }
+
+    var groupHeaders = body.querySelectorAll('.tag-select-group-header');
+    for (var k = 0; k < groupHeaders.length; k++) {
+      groupHeaders[k].addEventListener('click', function() {
+        var items = this.nextElementSibling;
+        var arrow = this.querySelector('.tag-select-group-arrow');
+        if (items.style.display === 'none') {
+          items.style.display = '';
+          if (arrow) arrow.classList.remove('collapsed');
+        } else {
+          items.style.display = 'none';
+          if (arrow) arrow.classList.add('collapsed');
+        }
+      });
+    }
+
+    document.getElementById('tagSelectDone').addEventListener('click', function() {
+      overlay.classList.remove('active');
+      renderNoteEdit(editData);
+    });
   }
 
   overlay.classList.add('active');
@@ -1107,62 +1147,6 @@ function renderTagSelectList(tagList, note, emptyMsg) {
   }
   html += '</div>';
   return html;
-}
-
-// 绑定标签选择事件
-function bindTagSelectEvents(note, editData, overlay, render) {
-  var body = document.getElementById('modalBody');
-
-  // Tab切换
-  var tabEls = body.querySelectorAll('[data-stab]');
-  for (var i = 0; i < tabEls.length; i++) {
-    tabEls[i].addEventListener('click', function() {
-      var activeTab = this.dataset.stab;
-      // 需要更新外层变量，用闭包
-      var tabs = body.querySelectorAll('[data-stab]');
-      for (var t = 0; t < tabs.length; t++) {
-        tabs[t].classList.toggle('active', tabs[t].dataset.stab === activeTab);
-      }
-      // 重新渲染
-      render();
-    });
-  }
-
-  // 标签点击
-  var chipEls = body.querySelectorAll('[data-stag]');
-  for (var j = 0; j < chipEls.length; j++) {
-    chipEls[j].addEventListener('click', function() {
-      var tag = this.dataset.stag;
-      if (!note.tags) note.tags = [];
-      var idx = note.tags.indexOf(tag);
-      if (idx >= 0) note.tags.splice(idx, 1);
-      else note.tags.push(tag);
-      triggerAutoSave();
-      render();
-    });
-  }
-
-  // 分组折叠
-  var groupHeaders = body.querySelectorAll('.tag-select-group-header');
-  for (var k = 0; k < groupHeaders.length; k++) {
-    groupHeaders[k].addEventListener('click', function() {
-      var items = this.nextElementSibling;
-      var arrow = this.querySelector('.tag-select-group-arrow');
-      if (items.style.display === 'none') {
-        items.style.display = '';
-        if (arrow) arrow.classList.remove('collapsed');
-      } else {
-        items.style.display = 'none';
-        if (arrow) arrow.classList.add('collapsed');
-      }
-    });
-  }
-
-  // 完成按钮
-  document.getElementById('tagSelectDone').addEventListener('click', function() {
-    overlay.classList.remove('active');
-    renderNoteEdit(editData);
-  });
 }
 
 // ========================================
