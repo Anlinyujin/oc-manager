@@ -2,24 +2,32 @@
 
 const STORAGE_KEY = 'oc_manager_data';
 let appData = {
-classes: [],
-notes: [],
-tags: { cp: [], custom: [] }
+  classes: [],
+  notes: [],
+  tags: { level1: [], level3: [] }
 };
 let autoSaveTimer = null;
 
 function loadData() {
-try {
-const s = localStorage.getItem(STORAGE_KEY);
-if (s) {
-const d = JSON.parse(s);
-appData.classes = d.classes || [];
-appData.notes = d.notes || [];
-appData.tags = d.tags || { cp: [], custom: [] };
-if (!appData.tags.cp) appData.tags.cp = [];
-if (!appData.tags.custom) appData.tags.custom = [];
-}
-} catch(e) {}
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const d = JSON.parse(s);
+      appData.classes = d.classes || [];
+      appData.notes = d.notes || [];
+      // 兼容旧数据结构
+      if (d.tags) {
+        if (d.tags.level1) {
+          appData.tags.level1 = d.tags.level1;
+          appData.tags.level3 = d.tags.level3 || [];
+        } else {
+          // 旧格式迁移：custom → level1，cp → level3
+          appData.tags.level1 = d.tags.custom || [];
+          appData.tags.level3 = d.tags.cp || [];
+        }
+      }
+    }
+  } catch(e) {}
 }
 
 function saveData() {
@@ -82,11 +90,11 @@ return names;
 }
 
 function getAllTags() {
-return {
-characters: getAllCharacterNames(),
-cp: appData.tags.cp || [],
-custom: appData.tags.custom || []
-};
+  return {
+    level1: appData.tags.level1 || [],
+    level2: getAllCharacterNames(),
+    level3: appData.tags.level3 || []
+  };
 }
 
 function exportBackup() {
