@@ -5,7 +5,7 @@
 // ===== 全局状态 =====
 var noteExportMode = false;        // 是否处于导出选择模式
 var noteExportSelection = [];      // 已选中的笔记ID列表
-var noteFilterTag = null;          // 当前筛选的标签
+var noteFilterTags = { level1: [], level2: [], level3: [] };  // 三级筛选
 var noteEditPreview = false;       // 编辑页是否处于预览模式
 var mdToolbarVisible = false;      // MD工具栏是否可见
 var mdPopupEl = null;              // MD工具栏弹出面板元素
@@ -18,17 +18,104 @@ var currentNoteTextarea = null;    // 当前正在编辑的textarea
 function renderNoteList() {
   var page = document.getElementById('pageNoteList');
   
-  // 筛选笔记
-  var filtered = appData.notes;
-  if (noteFilterTag) {
-    filtered = [];
-    for (var i = 0; i < appData.notes.length; i++) {
-      var note = appData.notes[i];
-      if (note.tags && note.tags.indexOf(noteFilterTag) >= 0) {
-        filtered.push(note);
-      }
+  // 筛选笔记：同级OR，跨级AND
+  var filtered = filterNotes();
+  var hasFilter = noteFilterTags.level1.length > 0 || noteFilterTags.level2.length > 0 || noteFilterTags.level3.length > 0;
+
+  // 渲染顶部操作栏
+  var html = '<div class="page-content">';
+  html += '<div class="action-bar">';
+  if (noteExportMode) {
+    html += '<button class="action-btn" id="noteExitExportBtn">\u2715 取消</button>';
+  } else {
+    html += '<button class="action-btn" id="noteExportBtn">导出</button>';
+    html += '<button class="action-btn" id="noteFilterBtn">筛选' + 
+            (hasFilter ? ' \u00b7 ' + getFilterSummary() : '') + '</button>';
+  }
+  html += '</div>';
+
+  // 渲染笔记列表
+  if (filtered.length === 0) {
+    html += '<div style="text-align:center; color:var(--text-secondary); padding:40px 0;">暂无笔记</div>';
+  }
+
+  for (var i = 0; i < filtered.length; i++) {
+    var note = filtered[i];
+    var realIndex = appData.notes.indexOf(note);
+    var tagStr = buildTagString(note.tags);
+
+    if (noteExportMode) {
+      html += renderNoteItemExportMode(note, tagStr);
+    } else {
+      html += renderNoteItemNormalMode(note, realIndex, tagStr);
     }
   }
+
+  // 新建按钮
+  if (!noteExportMode) {
+    html += '<div class="add-class-btn" data-action="add-note"><span>\u2295</span> 新建笔记</div>';
+  }
+  html += '</div>';
+
+  page.innerHTML = html;
+  bindNoteListEvents();
+  hideMdToolbar();
+}
+
+function filterNotes() {
+  var l1 = noteFilterTags.level1;
+  var l2 = noteFilterTags.level2;
+  var l3 = noteFilterTags.level3;
+  
+  if (l1.length === 0 && l2.length === 0 && l3.length === 0) {
+    return appData.notes;
+  }
+
+  var result = [];
+  for (var i = 0; i < appData.notes.length; i++) {
+    var note = appData.notes[i];
+    var tags = note.tags || [];
+
+    // 每级：选中的标签中至少有一个在笔记标签里（OR）
+    // 跨级：每个有选中标签的级别都要满足（AND）
+    var pass = true;
+
+    if (l1.length > 0) {
+      var match1 = false;
+      for (var a = 0; a < l1.length; a++) {
+        if (tags.indexOf(l1[a]) >= 0) { match1 = true; break; }
+      }
+      if (!match1) pass = false;
+    }
+
+    if (pass && l2.length > 0) {
+      var match2 = false;
+      for (var b = 0; b < l2.length; b++) {
+        if (tags.indexOf(l2[b]) >= 0) { match2 = true; break; }
+      }
+      if (!match2) pass = false;
+    }
+
+    if (pass && l3.length > 0) {
+      var match3 = false;
+      for (var c = 0; c < l3.length; c++) {
+        if (tags.indexOf(l3[c]) >= 0) { match3 = true; break; }
+      }
+      if (!match3) pass = false;
+    }
+
+    if (pass) result.push(note);
+  }
+  return result;
+}
+
+function getFilterSummary() {
+  var parts = [];
+  if (noteFilterTags.level1.length > 0) parts.push(noteFilterTags.level1.join('/'));
+  if (noteFilterTags.level2.length > 0) parts.push(noteFilterTags.level2.join('/'));
+  if (noteFilterTags.level3.length > 0) parts.push(noteFilterTags.level3.join('/'));
+  return parts.join(' + ');
+}
 
   // 渲染顶部操作栏
   var html = '<div class="page-content">';
@@ -267,119 +354,116 @@ function showNoteFilterModal() {
   var body = document.getElementById('modalBody');
   var actions = document.getElementById('modalActions');
 
-  var html = '<div class="filter-modal-content">';
-  
-  // 角色标签
-  html += buildFilterSection('chars', '角色', tags, appData.classes);
-  
-  // CP标签
-  if (tags.cp.length > 0) {
-    html += buildFilterSection('cp', 'CP', tags);
-  }
-  
-  // 自定义标签
-  if (tags.custom.length > 0) {
-    html += buildFilterSection('custom', '其他', tags);
-  }
-  
-  html += '</div>';
+  function render() {
+    var html = '<div class="filter-modal-content">';
 
-  body.innerHTML = html;
-  actions.innerHTML = 
-    '<button class="modal-btn" id="filterClearBtn">清除筛选</button>' +
-    '<button class="modal-btn primary" id="filterCloseBtn">关闭</button>';
-  actions.style.display = '';
-  overlay.classList.add('active');
+    // 一级
+    html += '<div class="filter-section">';
+    html += '<div class="filter-section-header" id="fh-l1">';
+    html += '<svg class="filter-section-arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">';
+    html += '<polyline points="6,4 12,10 6,16"/></svg>一级标签</div>';
+    html += '<div class="filter-items" id="fi-l1">';
+    for (var i = 0; i < tags.level1.length; i++) {
+      var sel1 = noteFilterTags.level1.indexOf(tags.level1[i]) >= 0 ? 'selected' : '';
+      html += '<div class="filter-chip ' + sel1 + '" data-flevel="level1" data-ftag="' + escapeHtml(tags.level1[i]) + '">' + escapeHtml(tags.level1[i]) + '</div>';
+    }
+    if (tags.level1.length === 0) html += '<span style="color:var(--text-secondary);font-size:13px;">暂无</span>';
+    html += '</div></div>';
 
-  bindFilterEvents(overlay);
-}
-
-// 构建筛选区块
-function buildFilterSection(key, title, tags, classes) {
-  var html = '<div class="filter-section">';
-  html += '<div class="filter-section-header" id="fh-' + key + '">';
-  html += '<svg class="filter-section-arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">';
-  html += '<polyline points="6,4 12,10 6,16"/></svg>' + title + '</div>';
-  html += '<div class="filter-items" id="fi-' + key + '">';
-
-  if (key === 'chars' && classes) {
-    // 按班级分组显示角色
-    for (var i = 0; i < classes.length; i++) {
-      var cls = classes[i];
+    // 二级（角色名，按班级分组）
+    html += '<div class="filter-section">';
+    html += '<div class="filter-section-header" id="fh-l2">';
+    html += '<svg class="filter-section-arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">';
+    html += '<polyline points="6,4 12,10 6,16"/></svg>角色</div>';
+    html += '<div class="filter-items" id="fi-l2">';
+    for (var ci = 0; ci < appData.classes.length; ci++) {
+      var cls = appData.classes[ci];
       if (cls.characters.length === 0) continue;
-      html += '<div style="width:100%; font-size:12px; color:var(--text-secondary); margin-top:4px;">' + 
-              escapeHtml(cls.name) + '</div>';
-      for (var j = 0; j < cls.characters.length; j++) {
-        var ch = cls.characters[j];
+      html += '<div style="width:100%; font-size:12px; color:var(--text-secondary); margin-top:4px;">' + escapeHtml(cls.name) + '</div>';
+      for (var cj = 0; cj < cls.characters.length; cj++) {
+        var ch = cls.characters[cj];
         if (!ch.name) continue;
-        var sel = noteFilterTag === ch.name ? 'selected' : '';
-        html += '<div class="filter-chip ' + sel + '" data-ftag="' + escapeHtml(ch.name) + '">' + 
-                escapeHtml(ch.name) + '</div>';
+        var sel2 = noteFilterTags.level2.indexOf(ch.name) >= 0 ? 'selected' : '';
+        html += '<div class="filter-chip ' + sel2 + '" data-flevel="level2" data-ftag="' + escapeHtml(ch.name) + '">' + escapeHtml(ch.name) + '</div>';
       }
     }
-  } else {
-    // CP和自定义标签
-    var tagList = key === 'cp' ? tags.cp : tags.custom;
-    for (var k = 0; k < tagList.length; k++) {
-      var sel2 = noteFilterTag === tagList[k] ? 'selected' : '';
-      html += '<div class="filter-chip ' + sel2 + '" data-ftag="' + escapeHtml(tagList[k]) + '">' + 
-              escapeHtml(tagList[k]) + '</div>';
+    html += '</div></div>';
+
+    // 三级
+    html += '<div class="filter-section">';
+    html += '<div class="filter-section-header" id="fh-l3">';
+    html += '<svg class="filter-section-arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">';
+    html += '<polyline points="6,4 12,10 6,16"/></svg>三级标签</div>';
+    html += '<div class="filter-items" id="fi-l3">';
+    for (var k = 0; k < tags.level3.length; k++) {
+      var sel3 = noteFilterTags.level3.indexOf(tags.level3[k]) >= 0 ? 'selected' : '';
+      html += '<div class="filter-chip ' + sel3 + '" data-flevel="level3" data-ftag="' + escapeHtml(tags.level3[k]) + '">' + escapeHtml(tags.level3[k]) + '</div>';
     }
-  }
+    if (tags.level3.length === 0) html += '<span style="color:var(--text-secondary);font-size:13px;">暂无</span>';
+    html += '</div></div>';
 
-  html += '</div></div>';
-  return html;
-}
+    html += '</div>';
+    body.innerHTML = html;
+    actions.innerHTML =
+      '<button class="modal-btn" id="filterClearBtn">清除筛选</button>' +
+      '<button class="modal-btn primary" id="filterDoneBtn">完成</button>';
+    actions.style.display = '';
 
-// 绑定筛选弹窗事件
-function bindFilterEvents(overlay) {
-  var body = document.getElementById('modalBody');
-  
-  // 标签点击
-  var chips = body.querySelectorAll('[data-ftag]');
-  for (var i = 0; i < chips.length; i++) {
-    chips[i].addEventListener('click', function() {
-      var tag = this.dataset.ftag;
-      noteFilterTag = noteFilterTag === tag ? null : tag;
+    // 标签点击：多选切换
+    var chips = body.querySelectorAll('[data-ftag]');
+    for (var t = 0; t < chips.length; t++) {
+      chips[t].addEventListener('click', function() {
+        var level = this.dataset.flevel;
+        var tag = this.dataset.ftag;
+        var arr = noteFilterTags[level];
+        var idx = arr.indexOf(tag);
+        if (idx >= 0) arr.splice(idx, 1);
+        else arr.push(tag);
+        render();
+      });
+    }
+
+    // 折叠
+    var sections = ['l1', 'l2', 'l3'];
+    for (var s = 0; s < sections.length; s++) {
+      bindFilterSectionToggle(sections[s]);
+    }
+
+    // 清除
+    document.getElementById('filterClearBtn').addEventListener('click', function() {
+      noteFilterTags = { level1: [], level2: [], level3: [] };
+      overlay.classList.remove('active');
+      renderNoteList();
+    });
+
+    // 完成
+    document.getElementById('filterDoneBtn').addEventListener('click', function() {
       overlay.classList.remove('active');
       renderNoteList();
     });
   }
 
-  // 折叠/展开
-  var sections = ['chars', 'cp', 'custom'];
-  for (var j = 0; j < sections.length; j++) {
-    bindFilterSectionToggle(sections[j]);
-  }
-
-  // 清除/关闭按钮
-  document.getElementById('filterClearBtn').addEventListener('click', function() {
-    noteFilterTag = null;
-    overlay.classList.remove('active');
-    renderNoteList();
-  });
-  document.getElementById('filterCloseBtn').addEventListener('click', function() {
-    overlay.classList.remove('active');
-  });
+  overlay.classList.add('active');
+  render();
 
   // 点击遮罩关闭
   var overlayHandler = function(e) {
     if (e.target === overlay) {
       overlay.classList.remove('active');
       overlay.removeEventListener('click', overlayHandler);
+      renderNoteList();
     }
   };
   overlay.addEventListener('click', overlayHandler);
 }
 
-// 绑定筛选区块折叠事件
 function bindFilterSectionToggle(key) {
   var header = document.getElementById('fh-' + key);
   var items = document.getElementById('fi-' + key);
   if (!header || !items) return;
 
   items.style.maxHeight = (items.scrollHeight + 100) + 'px';
-  
+
   header.addEventListener('click', function() {
     var arrow = header.querySelector('.filter-section-arrow');
     if (items.classList.contains('collapsed')) {
@@ -1042,21 +1126,21 @@ function showTagSelectModal(note, editData) {
   var overlay = document.getElementById('modalOverlay');
   var body = document.getElementById('modalBody');
   var actions = document.getElementById('modalActions');
-  var activeTab = 'characters';
+  var activeTab = 'level1';
 
   function render() {
     var html = '<div class="tag-select-tabs">';
-    html += '<div class="tag-select-tab ' + (activeTab === 'characters' ? 'active' : '') + '" data-stab="characters">角色</div>';
-    html += '<div class="tag-select-tab ' + (activeTab === 'cp' ? 'active' : '') + '" data-stab="cp">CP</div>';
-    html += '<div class="tag-select-tab ' + (activeTab === 'custom' ? 'active' : '') + '" data-stab="custom">其他</div>';
+    html += '<div class="tag-select-tab ' + (activeTab === 'level1' ? 'active' : '') + '" data-stab="level1">一级</div>';
+    html += '<div class="tag-select-tab ' + (activeTab === 'level2' ? 'active' : '') + '" data-stab="level2">角色</div>';
+    html += '<div class="tag-select-tab ' + (activeTab === 'level3' ? 'active' : '') + '" data-stab="level3">三级</div>';
     html += '</div><div class="tag-select-body">';
 
-    if (activeTab === 'characters') {
+    if (activeTab === 'level2') {
       html += renderTagSelectCharacters(note);
-    } else if (activeTab === 'cp') {
-      html += renderTagSelectList(tags.cp, note, '暂无CP标签，请在标签管理中添加');
     } else {
-      html += renderTagSelectList(tags.custom, note, '暂无自定义标签，请在标签管理中添加');
+      var list = activeTab === 'level1' ? tags.level1 : tags.level3;
+      var label = activeTab === 'level1' ? '一级' : '三级';
+      html += renderTagSelectList(list, note, '暂无' + label + '标签，请在标签管理中添加');
     }
 
     html += '</div>';
@@ -1064,7 +1148,7 @@ function showTagSelectModal(note, editData) {
     actions.innerHTML = '<button class="modal-btn primary" id="tagSelectDone">完成</button>';
     actions.style.display = '';
 
-    // 绑定事件（闭包内直接处理）
+    // tab切换
     var tabEls = body.querySelectorAll('[data-stab]');
     for (var i = 0; i < tabEls.length; i++) {
       tabEls[i].addEventListener('click', function() {
@@ -1073,6 +1157,7 @@ function showTagSelectModal(note, editData) {
       });
     }
 
+    // 标签点击
     var chipEls = body.querySelectorAll('[data-stag]');
     for (var j = 0; j < chipEls.length; j++) {
       chipEls[j].addEventListener('click', function() {
@@ -1086,6 +1171,7 @@ function showTagSelectModal(note, editData) {
       });
     }
 
+    // 班级分组折叠
     var groupHeaders = body.querySelectorAll('.tag-select-group-header');
     for (var k = 0; k < groupHeaders.length; k++) {
       groupHeaders[k].addEventListener('click', function() {
@@ -1111,7 +1197,6 @@ function showTagSelectModal(note, editData) {
   render();
 }
 
-// 渲染角色标签列表
 function renderTagSelectCharacters(note) {
   var html = '';
   for (var i = 0; i < appData.classes.length; i++) {
@@ -1126,7 +1211,7 @@ function renderTagSelectCharacters(note) {
       var ch = cls.characters[j];
       if (!ch.name) continue;
       var sel = (note.tags && note.tags.indexOf(ch.name) >= 0) ? 'selected' : '';
-      html += '<div class="tag-select-chip ' + sel + '" data-stag="' + escapeHtml(ch.name) + '">' + 
+      html += '<div class="tag-select-chip ' + sel + '" data-stag="' + escapeHtml(ch.name) + '">' +
               escapeHtml(ch.name) + '</div>';
     }
     html += '</div></div>';
@@ -1134,7 +1219,6 @@ function renderTagSelectCharacters(note) {
   return html;
 }
 
-// 渲染CP/自定义标签列表
 function renderTagSelectList(tagList, note, emptyMsg) {
   if (tagList.length === 0) {
     return '<div style="text-align:center; color:var(--text-secondary); padding:20px;">' + emptyMsg + '</div>';
@@ -1142,7 +1226,7 @@ function renderTagSelectList(tagList, note, emptyMsg) {
   var html = '<div class="tag-select-items" style="padding:4px 0;">';
   for (var i = 0; i < tagList.length; i++) {
     var sel = (note.tags && note.tags.indexOf(tagList[i]) >= 0) ? 'selected' : '';
-    html += '<div class="tag-select-chip ' + sel + '" data-stag="' + escapeHtml(tagList[i]) + '">' + 
+    html += '<div class="tag-select-chip ' + sel + '" data-stag="' + escapeHtml(tagList[i]) + '">' +
             escapeHtml(tagList[i]) + '</div>';
   }
   html += '</div>';
