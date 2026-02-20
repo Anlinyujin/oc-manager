@@ -692,17 +692,44 @@ function renderRelatedInfoList(char) {
     item.className = 'list-item';
     item.innerHTML = '<span class="list-item-number">' + (i + 1) + '.</span>' +
       '<div class="list-item-content"><textarea class="field-input">' + escapeHtml(info) + '</textarea></div>' +
-      '<button class="list-item-delete">\u2715</button>';
+      '<button class="list-item-more">\u2726</button>';
 
     item.querySelector('textarea').addEventListener('input', function(e) {
       char.relatedInfo[i] = e.target.value;
       triggerAutoSave();
     });
 
-    item.querySelector('.list-item-delete').addEventListener('click', function() {
-      char.relatedInfo.splice(i, 1);
-      triggerAutoSave();
-      renderRelatedInfoList(char);
+    item.querySelector('.list-item-more').addEventListener('click', function() {
+      var buttons = [];
+      if (i > 0) buttons.push({ text: '上移', primary: true });
+      if (i < char.relatedInfo.length - 1) buttons.push({ text: '下移', primary: true });
+      buttons.push({ text: '删除', danger: true });
+      buttons.push({ text: '取消' });
+
+      showModal({
+        message: '条目 ' + (i + 1),
+        buttons: buttons
+      }).then(function(r) {
+        var picked = buttons[r.index];
+        if (!picked) return;
+        if (picked.text === '上移') {
+          var temp = char.relatedInfo[i];
+          char.relatedInfo[i] = char.relatedInfo[i - 1];
+          char.relatedInfo[i - 1] = temp;
+          triggerAutoSave();
+          renderRelatedInfoList(char);
+        } else if (picked.text === '下移') {
+          var temp = char.relatedInfo[i];
+          char.relatedInfo[i] = char.relatedInfo[i + 1];
+          char.relatedInfo[i + 1] = temp;
+          triggerAutoSave();
+          renderRelatedInfoList(char);
+        } else if (picked.text === '删除') {
+          char.relatedInfo.splice(i, 1);
+          triggerAutoSave();
+          renderRelatedInfoList(char);
+        }
+      });
     });
 
     c.appendChild(item);
@@ -730,7 +757,7 @@ function renderRelationshipsList(char) {
             '<input class="field-input" data-rf="definition" value="' + escapeHtml(entry.definition) + '">' +
           '</div>' +
         '</div>' +
-        '<button class="relation-card-delete">\u2715</button>' +
+        '<button class="relation-card-more">\u2726</button>' +
       '</div>' +
       '<div class="field-row" style="margin-top:8px">' +
         '<div class="field-label">详细描述</div>' +
@@ -744,10 +771,38 @@ function renderRelationshipsList(char) {
       });
     });
 
-    card.querySelector('.relation-card-delete').addEventListener('click', function() {
-      char.relationships.entries.splice(i, 1);
-      triggerAutoSave();
-      renderRelationshipsList(char);
+    card.querySelector('.relation-card-more').addEventListener('click', function() {
+      var label = entry.target || '关系 ' + (i + 1);
+      var buttons = [];
+      if (i > 0) buttons.push({ text: '上移', primary: true });
+      if (i < char.relationships.entries.length - 1) buttons.push({ text: '下移', primary: true });
+      buttons.push({ text: '删除', danger: true });
+      buttons.push({ text: '取消' });
+
+      showModal({
+        message: '\u300c' + label + '\u300d',
+        buttons: buttons
+      }).then(function(r) {
+        var picked = buttons[r.index];
+        if (!picked) return;
+        if (picked.text === '上移') {
+          var temp = char.relationships.entries[i];
+          char.relationships.entries[i] = char.relationships.entries[i - 1];
+          char.relationships.entries[i - 1] = temp;
+          triggerAutoSave();
+          renderRelationshipsList(char);
+        } else if (picked.text === '下移') {
+          var temp = char.relationships.entries[i];
+          char.relationships.entries[i] = char.relationships.entries[i + 1];
+          char.relationships.entries[i + 1] = temp;
+          triggerAutoSave();
+          renderRelationshipsList(char);
+        } else if (picked.text === '删除') {
+          char.relationships.entries.splice(i, 1);
+          triggerAutoSave();
+          renderRelationshipsList(char);
+        }
+      });
     });
 
     c.appendChild(card);
@@ -931,4 +986,3 @@ function renderCharPreview(text) {
     showToast('已下载');
   });
 }
-
