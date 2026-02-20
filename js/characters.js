@@ -86,8 +86,8 @@ function parseImportXML(text) {
       });
     }
 
-    // 角色核心
-    var coreM = block.match(/<角色核心>([\s\S]*?)<\/角色核心>/);
+    // 核心特征
+    var coreM = block.match(/<核心特征>([\s\S]*?)<\/核心特征>/);
     if (coreM) char.coreTraits = coreM[1].trim();
 
     results.push(char);
@@ -610,8 +610,8 @@ function renderCharEdit(data) {
   h += '<button class="add-item-btn" data-action="add-relation">\u2295 添加关系人</button>';
   h += '</div>';
 
-  // 角色核心
-  h += '<div class="section"><div class="section-title">角色核心</div>';
+  // 核心特征
+  h += '<div class="section"><div class="section-title">核心特征</div>';
   h += '<div class="field-row"><textarea class="field-input large" data-field="coreTraits">' + escapeHtml(char.coreTraits) + '</textarea></div>';
   h += '</div>';
 
@@ -874,7 +874,7 @@ function generateCompactXML(c) {
     xml += '</人际关系>';
   }
 
-  if (c.coreTraits) xml += '<角色核心>' + escapeXml(c.coreTraits) + '</角色核心>';
+  if (c.coreTraits) xml += '<核心特征>' + escapeXml(c.coreTraits) + '</核心特征>';
 
   xml += '</角色>';
   return xml;
@@ -933,7 +933,7 @@ function generateFormattedXML(c) {
     xml += '</人际关系>\n';
   }
 
-  if (c.coreTraits) xml += '<角色核心>\n  ' + escapeXml(c.coreTraits) + '\n</角色核心>\n';
+  if (c.coreTraits) xml += '<核心特征>\n  ' + escapeXml(c.coreTraits) + '\n</核心特征>\n';
 
   xml += '</角色>';
   return xml;
