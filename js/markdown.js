@@ -321,17 +321,22 @@ function copyCodeBlock(id) {
 
 // ----- 预览页保存为图片（html2canvas） -----
 function savePreviewAsImage(previewEl, title) {
+  var isDark = document.body.classList.contains('dark-mode');
+  var bgColor = isDark ? '#1a1a1a' : '#fff';
+  var textColor = isDark ? '#e0e0e0' : '#1a1a1a';
+  var hrColor = isDark ? '#444' : '#e5e5e5';
+
   var container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:0;top:0;width:' + Math.min(window.innerWidth, 420) + 'px;background:#fff;padding:32px 24px;z-index:-1;';
+  container.style.cssText = 'position:fixed;left:0;top:0;width:' + Math.min(window.innerWidth, 420) + 'px;background:' + bgColor + ';padding:32px 24px;z-index:-1;color:' + textColor + ';';
 
   if (title) {
     var titleEl = document.createElement('div');
-    titleEl.style.cssText = 'font-size:20px;font-weight:700;margin-bottom:12px;color:#1a1a1a;';
+    titleEl.style.cssText = 'font-size:20px;font-weight:700;margin-bottom:12px;color:' + textColor + ';';
     titleEl.textContent = title;
     container.appendChild(titleEl);
 
     var hr = document.createElement('hr');
-    hr.style.cssText = 'border:none;border-top:1px solid #e5e5e5;margin:0 0 16px;';
+    hr.style.cssText = 'border:none;border-top:1px solid ' + hrColor + ';margin:0 0 16px;';
     container.appendChild(hr);
   }
 
@@ -340,13 +345,58 @@ function savePreviewAsImage(previewEl, title) {
   for (var i = 0; i < copyBtns.length; i++) {
     copyBtns[i].parentNode.removeChild(copyBtns[i]);
   }
+
+  if (isDark) {
+    clone.style.color = textColor;
+    var allEls = clone.querySelectorAll('*');
+    for (var j = 0; j < allEls.length; j++) {
+      var el = allEls[j];
+      var tag = el.tagName.toLowerCase();
+      if (tag === 'span' && el.style.color) continue;
+      if (tag === 'mark') {
+        el.style.color = '#1a1a1a';
+        continue;
+      }
+      el.style.color = textColor;
+    }
+    var pres = clone.querySelectorAll('pre');
+    for (var p = 0; p < pres.length; p++) {
+      pres[p].style.background = '#2a2a2a';
+      pres[p].style.color = '#e0e0e0';
+    }
+    var codes = clone.querySelectorAll('code');
+    for (var c = 0; c < codes.length; c++) {
+      codes[c].style.background = '#333';
+      codes[c].style.color = '#e83e8c';
+    }
+    var blockquotes = clone.querySelectorAll('blockquote');
+    for (var b = 0; b < blockquotes.length; b++) {
+      blockquotes[b].style.borderLeftColor = '#555';
+      blockquotes[b].style.color = '#aaa';
+      blockquotes[b].style.background = 'transparent';
+    }
+    var tables = clone.querySelectorAll('table');
+    for (var t = 0; t < tables.length; t++) {
+      tables[t].style.borderColor = '#444';
+    }
+    var cells = clone.querySelectorAll('th, td');
+    for (var d = 0; d < cells.length; d++) {
+      cells[d].style.borderColor = '#444';
+      cells[d].style.color = textColor;
+    }
+    var ths = clone.querySelectorAll('th');
+    for (var th = 0; th < ths.length; th++) {
+      ths[th].style.background = '#333';
+    }
+  }
+
   container.appendChild(clone);
   document.body.appendChild(container);
 
   setTimeout(function() {
     html2canvas(container, {
       scale: 2,
-      backgroundColor: '#ffffff',
+      backgroundColor: bgColor,
       useCORS: true,
       logging: false
     }).then(function(canvas) {
