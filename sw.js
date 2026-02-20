@@ -1,4 +1,4 @@
-var CACHE_NAME = 'oc-manager-v11';
+var CACHE_NAME = 'oc-manager-v12';
 var ASSETS = [
   './',
   './index.html',
