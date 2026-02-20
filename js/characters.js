@@ -21,6 +21,115 @@ function escapeXml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// ===== XML导入解析 =====
+function parseImportXML(text) {
+  var results = [];
+  var regex = /<角色[^>]*>([\s\S]*?)<\/角色>/g;
+  var match;
+  while ((match = regex.exec(text)) !== null) {
+    var block = match[1];
+    var char = createCharacter();
+
+    // 基本信息
+    var nameM = block.match(/<姓名>([\s\S]*?)<\/姓名>/);
+    if (nameM) char.name = nameM[1].trim();
+    var genderM = block.match(/<性别>([\s\S]*?)<\/性别>/);
+    if (genderM) char.gender = genderM[1].trim();
+    var ageM = block.match(/<年龄>([\s\S]*?)<\/年龄>/);
+    if (ageM) char.age = ageM[1].trim();
+
+    // 班级信息
+    var classM = block.match(/<班级>([\s\S]*?)<\/班级>/);
+    if (classM) char.className = classM[1].trim();
+    var posM = block.match(/<身份>([\s\S]*?)<\/身份>/);
+    if (!posM) posM = block.match(/<职位>([\s\S]*?)<\/职位>/);
+    if (posM) char.position = posM[1].trim();
+    var seatM = block.match(/<座位>([\s\S]*?)<\/座位>/);
+    if (seatM) char.seat = seatM[1].trim();
+
+    // 外观
+    var hairM = block.match(/<发型>([\s\S]*?)<\/发型>/);
+    if (hairM) char.appearance.hairstyle = hairM[1].trim();
+    var eyeM = block.match(/<瞳色>([\s\S]*?)<\/瞳色>/);
+    if (eyeM) char.appearance.eyeColor = eyeM[1].trim();
+    var heightM = block.match(/<身高>([\s\S]*?)<\/身高>/);
+    if (heightM) char.appearance.height = heightM[1].trim();
+    var featM = block.match(/<五官>([\s\S]*?)<\/五官>/);
+    if (featM) char.appearance.features = featM[1].trim();
+    var outfitM = block.match(/<穿搭>([\s\S]*?)<\/穿搭>/);
+    if (outfitM) char.appearance.outfit = outfitM[1].trim();
+    var otherM = block.match(/<其他>([\s\S]*?)<\/其他>/);
+    if (otherM) char.appearance.other = otherM[1].trim();
+
+    // 背景
+    var bgM = block.match(/<背景>([\s\S]*?)<\/背景>/);
+    if (bgM) char.background = bgM[1].trim();
+
+    // 相关信息
+    var infoRegex = /<条目\d+>([\s\S]*?)<\/条目\d+>/g;
+    var infoM;
+    while ((infoM = infoRegex.exec(block)) !== null) {
+      var val = infoM[1].trim();
+      if (val) char.relatedInfo.push(val);
+    }
+
+    // 人际关系
+    var overviewM = block.match(/<社交总览>([\s\S]*?)<\/社交总览>/);
+    if (overviewM) char.relationships.overview = overviewM[1].trim();
+    var relRegex = /<关系\s+对象="([^"]*)"(?:\s+定义="([^"]*)")?>([\s\S]*?)<\/关系>/g;
+    var relM;
+    while ((relM = relRegex.exec(block)) !== null) {
+      char.relationships.entries.push({
+        target: relM[1] || '',
+        definition: relM[2] || '',
+        description: relM[3].trim()
+      });
+    }
+
+    // 核心特征
+    var coreM = block.match(/<核心特征>([\s\S]*?)<\/核心特征>/);
+    if (coreM) char.coreTraits = coreM[1].trim();
+
+    results.push(char);
+  }
+  return results;
+}
+
+function doImportCharacters(chars) {
+  var count = 0;
+  chars.forEach(function(char) {
+    var targetClass = null;
+    if (char.className) {
+      for (var i = 0; i < appData.classes.length; i++) {
+        if (appData.classes[i].name === char.className) {
+          targetClass = appData.classes[i];
+          break;
+        }
+      }
+      if (!targetClass) {
+        targetClass = createClass(char.className);
+        appData.classes.push(targetClass);
+      }
+    } else {
+      // 没有班级信息，放到"未分类"
+      for (var i = 0; i < appData.classes.length; i++) {
+        if (appData.classes[i].name === '未分类') {
+          targetClass = appData.classes[i];
+          break;
+        }
+      }
+      if (!targetClass) {
+        targetClass = createClass('未分类');
+        appData.classes.push(targetClass);
+      }
+    }
+    targetClass.characters.push(char);
+    count++;
+  });
+  saveData();
+  return count;
+}
+
 // ===== 人设卡列表页 =====
 function renderCharList() {
   var page = document.getElementById('pageCharList');
@@ -31,6 +140,7 @@ function renderCharList() {
   if (charExportMode) {
     h += '<button class="action-btn" id="charExitExportBtn">\u2715 取消</button>';
   } else {
+    h += '<button class="action-btn" id="charImportBtn">导入</button>';
     h += '<button class="action-btn" id="charExportBtn">导出</button>';
     h += '<button class="action-btn" id="charSaveBtn">保存</button>';
   }
@@ -130,6 +240,9 @@ function bindCharListEvents(page) {
   });
 
   if (!charExportMode) {
+    var importBtn = document.getElementById('charImportBtn');
+    if (importBtn) importBtn.addEventListener('click', showImportModal);
+
     var exportBtn = document.getElementById('charExportBtn');
     if (exportBtn) exportBtn.addEventListener('click', function() {
       charExportMode = true;
@@ -165,6 +278,41 @@ function bindCharListEvents(page) {
   // 展开状态的 class-body 设置高度动画
   page.querySelectorAll('.class-body:not(.collapsed)').forEach(function(body) {
     body.style.maxHeight = (body.scrollHeight + 2000) + 'px';
+  });
+}
+
+// ===== 导入弹窗 =====
+function showImportModal() {
+  showModal({
+    message: '粘贴XML文本导入角色',
+    html: '<textarea class="modal-textarea" id="importTextarea" rows="10" style="width:100%;box-sizing:border-box;resize:vertical;font-size:14px;font-family:monospace;margin-top:8px;padding:8px;border:1px solid #ddd;border-radius:6px;"></textarea>',
+    buttons: [{ text: '取消' }, { text: '解析导入', primary: true }]
+  }).then(function(r) {
+    if (r.index === 1) {
+      var textarea = document.getElementById('importTextarea');
+      var text = textarea ? textarea.value : '';
+      if (!text.trim()) { showToast('内容为空'); return; }
+
+      var chars = parseImportXML(text);
+      if (chars.length === 0) {
+        showToast('未识别到角色数据');
+        return;
+      }
+
+      // 显示确认
+      var names = chars.map(function(c) { return c.name || '未命名'; });
+      var preview = '识别到 ' + chars.length + ' 个角色：\n' + names.join('、');
+      showModal({
+        message: preview,
+        buttons: [{ text: '取消' }, { text: '确认导入', primary: true }]
+      }).then(function(r2) {
+        if (r2.index === 1) {
+          var count = doImportCharacters(chars);
+          showToast('已导入 ' + count + ' 个角色');
+          renderCharList();
+        }
+      });
+    }
   });
 }
 
@@ -319,15 +467,21 @@ function handleClassMore(ci) {
   });
 }
 
-// ----- 角色更多操作 -----
+// ----- 角色更多操作（加了移动班级） -----
 function handleCharMore(ci, chi) {
   var char = appData.classes[ci].characters[chi];
   var cn = char.name || '未命名角色';
   showModal({
     message: '\u300c' + cn + '\u300d',
-    buttons: [{ text: '删除', danger: true }, { text: '取消' }]
+    buttons: [
+      { text: '移动到其他班级', primary: true },
+      { text: '删除', danger: true },
+      { text: '取消' }
+    ]
   }).then(function(r) {
     if (r.index === 0) {
+      showMoveClassModal(ci, chi);
+    } else if (r.index === 1) {
       showModal({
         message: '确定删除\u300c' + cn + '\u300d吗？',
         buttons: [{ text: '取消' }, { text: '删除', danger: true }]
@@ -343,6 +497,51 @@ function handleCharMore(ci, chi) {
   });
 }
 
+// ----- 移动班级弹窗 -----
+function showMoveClassModal(ci, chi) {
+  var char = appData.classes[ci].characters[chi];
+  var currentClassName = appData.classes[ci].name;
+
+  var listHtml = '<div style="margin-top:8px;max-height:50vh;overflow-y:auto;">';
+  appData.classes.forEach(function(cls, i) {
+    if (i === ci) return; // 跳过当前班级
+    listHtml += '<div class="move-class-item" data-target-ci="' + i + '" style="padding:10px 12px;border:1px solid #ddd;border-radius:6px;margin-bottom:6px;cursor:pointer;">' + escapeHtml(cls.name) + '</div>';
+  });
+  listHtml += '</div>';
+
+  if (appData.classes.length <= 1) {
+    showToast('没有其他班级可移动');
+    return;
+  }
+
+  showModal({
+    message: '将\u300c' + (char.name || '未命名角色') + '\u300d移动到：',
+    html: listHtml,
+    buttons: [{ text: '取消' }],
+    dismissible: true
+  });
+
+  // 绑定点击事件
+  setTimeout(function() {
+    document.querySelectorAll('.move-class-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        var targetCi = parseInt(item.dataset.targetCi);
+        // 从原班级移除
+        var removed = appData.classes[ci].characters.splice(chi, 1)[0];
+        // 加到目标班级
+        appData.classes[targetCi].characters.push(removed);
+        // 更新角色的className字段
+        removed.className = appData.classes[targetCi].name;
+        saveData();
+        // 关闭弹窗
+        document.getElementById('modalOverlay').classList.remove('active');
+        renderCharList();
+        showToast('已移动到\u300c' + appData.classes[targetCi].name + '\u300d');
+      });
+    });
+  }, 100);
+}
+
 // ----- 导出计数 -----
 function updateExportCount() {
   var btn = document.getElementById('exportConfirmBtn');
@@ -354,6 +553,9 @@ function renderCharEdit(data) {
   var page = document.getElementById('pageCharEdit');
   var char = findCharacter(data.charId);
   if (!char) { navigateTo('charList'); return; }
+
+  // 兼容旧数据：没有coreTraits字段时补上
+  if (char.coreTraits === undefined) char.coreTraits = '';
 
   var h = '<div class="note-edit-page">';
 
@@ -376,7 +578,7 @@ function renderCharEdit(data) {
   // 班级
   h += '<div class="section"><div class="section-title">班级</div>';
   h += fieldRow('班级', 'className', char.className);
-  h += fieldRow('职位', 'position', char.position);
+  h += fieldRow('身份', 'position', char.position);
   h += fieldRow('座位', 'seat', char.seat);
   h += '</div>';
 
@@ -406,6 +608,11 @@ function renderCharEdit(data) {
   h += textareaRow('社交总览', 'relationships.overview', char.relationships.overview);
   h += '<div id="relationshipsList"></div>';
   h += '<button class="add-item-btn" data-action="add-relation">\u2295 添加关系人</button>';
+  h += '</div>';
+
+  // 核心特征
+  h += '<div class="section"><div class="section-title">核心特征</div>';
+  h += '<div class="field-row"><textarea class="field-input large" data-field="coreTraits">' + escapeHtml(char.coreTraits) + '</textarea></div>';
   h += '</div>';
 
   h += '</div>'; // note-edit-body
@@ -572,7 +779,7 @@ function generateCompactXML(c) {
   if (c.className || c.position || c.seat) {
     xml += '<班级信息>';
     if (c.className) xml += '<班级>' + escapeXml(c.className) + '</班级>';
-    if (c.position) xml += '<职位>' + escapeXml(c.position) + '</职位>';
+    if (c.position) xml += '<身份>' + escapeXml(c.position) + '</身份>';
     if (c.seat) xml += '<座位>' + escapeXml(c.seat) + '</座位>';
     xml += '</班级信息>';
   }
@@ -612,6 +819,8 @@ function generateCompactXML(c) {
     xml += '</人际关系>';
   }
 
+  if (c.coreTraits) xml += '<核心特征>' + escapeXml(c.coreTraits) + '</核心特征>';
+
   xml += '</角色>';
   return xml;
 }
@@ -629,7 +838,7 @@ function generateFormattedXML(c) {
   if (c.className || c.position || c.seat) {
     xml += '<班级信息>\n';
     if (c.className) xml += '  <班级>' + escapeXml(c.className) + '</班级>\n';
-    if (c.position) xml += '  <职位>' + escapeXml(c.position) + '</职位>\n';
+    if (c.position) xml += '  <身份>' + escapeXml(c.position) + '</身份>\n';
     if (c.seat) xml += '  <座位>' + escapeXml(c.seat) + '</座位>\n';
     xml += '</班级信息>\n';
   }
@@ -668,6 +877,8 @@ function generateFormattedXML(c) {
     });
     xml += '</人际关系>\n';
   }
+
+  if (c.coreTraits) xml += '<核心特征>\n  ' + escapeXml(c.coreTraits) + '\n</核心特征>\n';
 
   xml += '</角色>';
   return xml;
@@ -720,3 +931,4 @@ function renderCharPreview(text) {
     showToast('已下载');
   });
 }
+
