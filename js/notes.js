@@ -117,46 +117,6 @@ function getFilterSummary() {
   return parts.join(' + ');
 }
 
-  // 渲染顶部操作栏
-  var html = '<div class="page-content">';
-  html += '<div class="action-bar">';
-  if (noteExportMode) {
-    html += '<button class="action-btn" id="noteExitExportBtn">✕ 取消</button>';
-  } else {
-    html += '<button class="action-btn" id="noteExportBtn">导出</button>';
-    html += '<button class="action-btn" id="noteFilterBtn">筛选' + 
-            (noteFilterTag ? ' · ' + noteFilterTag : '') + '</button>';
-  }
-  html += '</div>';
-
-  // 渲染笔记列表
-  if (filtered.length === 0) {
-    html += '<div style="text-align:center; color:var(--text-secondary); padding:40px 0;">暂无笔记</div>';
-  }
-
-  for (var i = 0; i < filtered.length; i++) {
-    var note = filtered[i];
-    var realIndex = appData.notes.indexOf(note);
-    var tagStr = buildTagString(note.tags);
-
-    if (noteExportMode) {
-      html += renderNoteItemExportMode(note, tagStr);
-    } else {
-      html += renderNoteItemNormalMode(note, realIndex, tagStr);
-    }
-  }
-
-  // 新建按钮
-  if (!noteExportMode) {
-    html += '<div class="add-class-btn" data-action="add-note"><span>⊕</span> 新建笔记</div>';
-  }
-  html += '</div>';
-
-  page.innerHTML = html;
-  bindNoteListEvents();
-  hideMdToolbar();
-}
-
 // 构建标签字符串
 function buildTagString(tags) {
   if (!tags || tags.length === 0) return '';
