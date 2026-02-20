@@ -340,38 +340,6 @@ function savePreviewAsImage(previewEl, title) {
   for (var i = 0; i < copyBtns.length; i++) {
     copyBtns[i].parentNode.removeChild(copyBtns[i]);
   }
-
-  // 强制亮色样式，避免夜间模式影响导出图片
-  clone.style.color = '#1a1a1a';
-  var allEls = clone.querySelectorAll('*');
-  for (var j = 0; j < allEls.length; j++) {
-    var el = allEls[j];
-    var tag = el.tagName.toLowerCase();
-    if (tag === 'code' || tag === 'pre') {
-      el.style.background = '#f5f5f5';
-      el.style.color = '#333';
-    } else if (tag === 'blockquote') {
-      el.style.borderColor = '#ddd';
-      el.style.background = '#fafafa';
-      el.style.color = '#555';
-    } else if (tag === 'hr') {
-      el.style.borderColor = '#e5e5e5';
-    } else if (tag === 'a') {
-      el.style.color = '#1a73e8';
-    } else if (tag === 'th' || tag === 'td') {
-      el.style.borderColor = '#ddd';
-      el.style.color = '#1a1a1a';
-    } else if (tag === 'details') {
-      el.style.borderColor = '#e5e5e5';
-      el.style.background = '#fafafa';
-    }
-    // 通用：清除可能继承的夜间模式浅色
-    var computed = window.getComputedStyle(el);
-    if (computed.color === 'rgb(224, 224, 224)' || computed.color === 'rgb(187, 187, 187)' || computed.color === 'rgb(170, 170, 170)') {
-      el.style.color = '#1a1a1a';
-    }
-  }
-
   container.appendChild(clone);
   document.body.appendChild(container);
 
