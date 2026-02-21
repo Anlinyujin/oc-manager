@@ -1,4 +1,4 @@
-var CACHE_NAME = 'oc-manager-v12';
+var CACHE_NAME = 'oc-manager-v13';
 var ASSETS = [
   './',
   './index.html',
@@ -12,6 +12,7 @@ var ASSETS = [
   './js/characters.js',
   './js/notes.js',
   './js/tags.js',
+  './js/info.js',
   './js/lyrics.js',
   './js/settings.js',
   './js/app.js'
