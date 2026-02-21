@@ -20,7 +20,7 @@ function renderInfoList() {
     h += '<div class="char-actions">';
     h += '<button class="small-btn info-move-btn" data-id="' + s.id + '" data-dir="up">' + ICONS.up + '</button>';
     h += '<button class="small-btn info-move-btn" data-id="' + s.id + '" data-dir="down">' + ICONS.down + '</button>';
-    h += '<button class="small-btn info-delete-btn" data-id="' + s.id + '">' + ICONS.delete + '</button>';
+    h += '<button class="small-btn info-more-btn" data-id="' + s.id + '">' + ICONS.more + '</button>';
     h += '</div></div>';
   }
 
@@ -60,23 +60,32 @@ function renderInfoList() {
     });
   });
 
-  page.querySelectorAll('.info-delete-btn').forEach(function(btn) {
+  page.querySelectorAll('.info-more-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var id = this.getAttribute('data-id');
       var sheet = findInfoSheet(id);
       var name = (sheet && sheet.title) ? sheet.title : '未命名信息表';
       showModal({
-        message: '删除「' + name + '」？',
-        buttons: [{ text: '取消' }, { text: '删除', danger: true }]
+        message: '「' + name + '」',
+        buttons: [
+          { text: '删除', danger: true },
+          { text: '取消' }
+        ]
       }).then(function(r) {
-        if (r.index !== 1) return;
-        for (var i = 0; i < appData.infoSheets.length; i++) {
-          if (appData.infoSheets[i].id === id) {
-            appData.infoSheets.splice(i, 1); break;
+        if (r.index !== 0) return;
+        showModal({
+          message: '确定删除「' + name + '」吗？',
+          buttons: [{ text: '取消' }, { text: '删除', danger: true }]
+        }).then(function(r2) {
+          if (r2.index !== 1) return;
+          for (var i = 0; i < appData.infoSheets.length; i++) {
+            if (appData.infoSheets[i].id === id) {
+              appData.infoSheets.splice(i, 1); break;
+            }
           }
-        }
-        saveData();
-        renderInfoList();
+          saveData();
+          renderInfoList();
+        });
       });
     });
   });
@@ -226,7 +235,7 @@ function showInfoGroupModal(sheet, allChars) {
     h += '<div style="display:flex;gap:2px;">';
     h += '<button class="small-btn info-grp-move" data-gidx="' + g + '" data-dir="up">' + ICONS.up + '</button>';
     h += '<button class="small-btn info-grp-move" data-gidx="' + g + '" data-dir="down">' + ICONS.down + '</button>';
-    h += '<button class="small-btn info-grp-del" data-gidx="' + g + '">' + ICONS.delete + '</button>';
+    h += '<button class="small-btn info-grp-del" data-gidx="' + g + '">✕</button>';
     h += '</div></div>';
 
     // 分组内角色
