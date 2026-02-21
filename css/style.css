@@ -1975,3 +1975,172 @@ body.dark-mode .list-item-more:active,
 body.dark-mode .relation-card-more:active {
   color: #aaa;
 }
+
+/* ===== 信息表 ===== */
+.info-group-section {
+  margin-bottom: 20px;
+}
+
+.info-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-group-ungrouped {
+  color: #bbb;
+}
+
+.info-char-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.info-char-name {
+  font-size: 14px;
+  min-width: 60px;
+  flex-shrink: 0;
+  color: var(--text);
+}
+
+.info-char-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.info-char-input:focus {
+  border-color: #999;
+}
+
+.info-edit-body {
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+
+/* 分组管理弹窗 */
+.info-modal-group {
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.info-modal-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--hover);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.info-modal-group-name {
+  flex: 1;
+}
+
+.info-modal-char {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.info-modal-add-char {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: none;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+}
+
+.info-modal-add-char:active {
+  background: var(--hover);
+}
+
+.info-modal-ungrouped {
+  margin-bottom: 16px;
+}
+
+/* 夜间模式 - 信息表 */
+body.dark-mode .info-group-title {
+  color: #aaa;
+  border-bottom-color: #333;
+}
+
+body.dark-mode .info-group-ungrouped {
+  color: #666;
+}
+
+body.dark-mode .info-char-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .info-char-input {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+body.dark-mode .info-char-input:focus {
+  border-color: #666;
+}
+
+body.dark-mode .info-modal-group {
+  border-color: #444;
+}
+
+body.dark-mode .info-modal-group-header {
+  background: #333;
+}
+
+body.dark-mode .info-modal-char {
+  border-top-color: #444;
+}
+
+body.dark-mode .info-modal-add-char {
+  border-top-color: #444;
+  color: #888;
+}
+
+body.dark-mode .info-modal-add-char:active {
+  background: #333;
+}
+
+/* PC端 - 信息表 */
+@media (min-width: 768px) {
+  .info-char-name {
+    font-size: 15px;
+    min-width: 80px;
+  }
+
+  .info-char-input {
+    font-size: 15px;
+  }
+
+  .info-edit-body {
+    padding: 20px 60px !important;
+  }
+}
+
