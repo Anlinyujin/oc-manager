@@ -45,6 +45,7 @@ window.onerror = function(msg, url, line, col, error) {
   <nav class="sidebar-nav">
     <div class="sidebar-item" id="navCharCards">人设卡</div>
     <div class="sidebar-item" id="navNotes">笔记</div>
+    <div class="sidebar-item" id="navInfo">信息</div>
     <div class="sidebar-item" id="navTags">标签管理</div>
   </nav>
   <div class="sidebar-footer">
@@ -65,6 +66,9 @@ window.onerror = function(msg, url, line, col, error) {
   <div class="page" id="pageNoteEdit"></div>
   <div class="page" id="pageTagManager"></div>
   <div class="page" id="pageSettings"></div>
+  <div class="page" id="pageInfoList"></div>
+  <div class="page" id="pageInfoEdit"></div>
+  <div class="page" id="pageInfoPreview"></div>
 </div>
 
 <div class="export-bottom-bar" id="exportBottomBar">
@@ -88,6 +92,7 @@ window.onerror = function(msg, url, line, col, error) {
 <script src="js/characters.js"></script>
 <script src="js/notes.js"></script>
 <script src="js/tags.js"></script>
+<script src="js/info.js"></script>
 <script src="js/lyrics.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/app.js"></script>
@@ -103,6 +108,7 @@ window.addEventListener('load', function() {
     'renderCharEdit': typeof renderCharEdit,
     'navigateTo': typeof navigateTo,
     'showModal': typeof showModal,
+    'renderInfoList': typeof renderInfoList,
     'loadData': typeof loadData,
     'renderMarkdown': typeof renderMarkdown
   };
