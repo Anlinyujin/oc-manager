@@ -46,7 +46,6 @@ function navigateTo(page, data) {
       break;
     case 'charEdit':
       document.getElementById('pageCharEdit').classList.add('active');
-      // 隐藏主topbar，和笔记编辑页一样
       topbar.style.display = 'none';
       main.style.paddingTop = '0';
       title.textContent = ''; title.classList.remove('visible');
@@ -64,12 +63,28 @@ function navigateTo(page, data) {
       break;
     case 'noteEdit':
       document.getElementById('pageNoteEdit').classList.add('active');
-      // 隐藏主topbar
       topbar.style.display = 'none';
       main.style.paddingTop = '0';
       title.textContent = ''; title.classList.remove('visible');
       noteEditPreview = false;
       renderNoteEdit(data);
+      break;
+    case 'infoList':
+      document.getElementById('pageInfoList').classList.add('active');
+      title.textContent = '信息'; title.classList.add('visible');
+      renderInfoList();
+      break;
+    case 'infoEdit':
+      document.getElementById('pageInfoEdit').classList.add('active');
+      topbar.style.display = 'none';
+      main.style.paddingTop = '0';
+      title.textContent = ''; title.classList.remove('visible');
+      renderInfoEdit(data);
+      break;
+    case 'infoPreview':
+      document.getElementById('pageInfoPreview').classList.add('active');
+      title.textContent = '导出预览'; title.classList.add('visible');
+      renderInfoPreview(data);
       break;
     case 'tagManager':
       document.getElementById('pageTagManager').classList.add('active');
@@ -106,6 +121,9 @@ function goBack() {
     case 'charList': navigateTo('home'); break;
     case 'noteEdit': navigateTo('noteList'); break;
     case 'noteList': navigateTo('home'); break;
+    case 'infoEdit': navigateTo('infoList'); break;
+    case 'infoPreview': navigateTo('infoList'); break;
+    case 'infoList': navigateTo('home'); break;
     case 'tagManager': navigateTo('home'); break;
     case 'settings': navigateTo('home'); break;
     case 'home': break;
@@ -126,7 +144,6 @@ function openSidebar() {
 }
 
 function closeSidebar() { 
-  // 只有在非PC端（手机端）才真正关闭侧边栏
   if (!isPC()) { 
     sidebar.classList.remove('active'); 
     sidebarOverlay.classList.remove('active'); 
@@ -142,6 +159,7 @@ sidebarOverlay.addEventListener('click', closeSidebar);
 document.getElementById('sidebarLyrics').addEventListener('click', function() { closeSidebar(); onLyricsClick(); });
 document.getElementById('navCharCards').addEventListener('click', function() { closeSidebar(); navigateTo('charList'); });
 document.getElementById('navNotes').addEventListener('click', function() { closeSidebar(); navigateTo('noteList'); });
+document.getElementById('navInfo').addEventListener('click', function() { closeSidebar(); navigateTo('infoList'); });
 document.getElementById('navTags').addEventListener('click', function() { closeSidebar(); navigateTo('tagManager'); });
 document.getElementById('navSettings').addEventListener('click', function() { closeSidebar(); navigateTo('settings'); });
 document.getElementById('navBackup').addEventListener('click', function() { closeSidebar(); exportBackup(); });
@@ -162,6 +180,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
         appData = imported;
         if (!appData.notes) appData.notes = [];
         if (!appData.tags) appData.tags = { cp: [], custom: [] };
+        if (!appData.infoSheets) appData.infoSheets = [];
       } else {
         var existingNames = appData.classes.map(function(c) { return c.name; });
         (imported.classes || []).forEach(function(ic) {
@@ -173,6 +192,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
           appData.classes.push(ic);
         });
         (imported.notes || []).forEach(function(n) { if (!n.id) n.id = generateId(); appData.notes.push(n); });
+        (imported.infoSheets || []).forEach(function(s) { if (!s.id) s.id = generateId(); appData.infoSheets.push(s); });
         if (imported.tags) {
           (imported.tags.cp || []).forEach(function(t) { if (appData.tags.cp.indexOf(t) < 0) appData.tags.cp.push(t); });
           (imported.tags.custom || []).forEach(function(t) { if (appData.tags.custom.indexOf(t) < 0) appData.tags.custom.push(t); });
@@ -181,6 +201,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
       saveData();
       if (currentPage === 'charList') renderCharList();
       else if (currentPage === 'noteList') renderNoteList();
+      else if (currentPage === 'infoList') renderInfoList();
       showToast('恢复成功');
     });
   }).catch(function(err) { showToast('恢复失败：' + err); });
