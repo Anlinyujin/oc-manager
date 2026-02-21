@@ -28,10 +28,19 @@ function renderInfoList() {
   page.innerHTML = h;
 
   document.getElementById('infoAddBtn').addEventListener('click', function() {
-    var sheet = createInfoSheet();
-    appData.infoSheets.push(sheet);
-    saveData();
-    navigateTo('infoEdit', sheet.id);
+    showModal({
+      message: '新建信息表',
+      input: true,
+      inputValue: '',
+      buttons: [{ text: '取消' }, { text: '创建', primary: true }]
+    }).then(function(r) {
+      if (r.index !== 1) return;
+      var sheet = createInfoSheet();
+      sheet.title = (r.value && r.value.trim()) ? r.value.trim() : '未命名信息表';
+      appData.infoSheets.push(sheet);
+      saveData();
+      navigateTo('infoEdit', sheet.id);
+    });
   });
 
   page.querySelectorAll('.info-item-left').forEach(function(el) {
@@ -68,24 +77,39 @@ function renderInfoList() {
       showModal({
         message: '「' + name + '」',
         buttons: [
+          { text: '重命名', primary: true },
           { text: '删除', danger: true },
           { text: '取消' }
         ]
       }).then(function(r) {
-        if (r.index !== 0) return;
-        showModal({
-          message: '确定删除「' + name + '」吗？',
-          buttons: [{ text: '取消' }, { text: '删除', danger: true }]
-        }).then(function(r2) {
-          if (r2.index !== 1) return;
-          for (var i = 0; i < appData.infoSheets.length; i++) {
-            if (appData.infoSheets[i].id === id) {
-              appData.infoSheets.splice(i, 1); break;
+        if (r.index === 0) {
+          showModal({
+            message: '重命名信息表',
+            input: true,
+            inputValue: sheet.title || '',
+            buttons: [{ text: '取消' }, { text: '确定', primary: true }]
+          }).then(function(r2) {
+            if (r2.index === 1 && r2.value && r2.value.trim()) {
+              sheet.title = r2.value.trim();
+              saveData();
+              renderInfoList();
             }
-          }
-          saveData();
-          renderInfoList();
-        });
+          });
+        } else if (r.index === 1) {
+          showModal({
+            message: '确定删除「' + name + '」吗？',
+            buttons: [{ text: '取消' }, { text: '删除', danger: true }]
+          }).then(function(r2) {
+            if (r2.index !== 1) return;
+            for (var i = 0; i < appData.infoSheets.length; i++) {
+              if (appData.infoSheets[i].id === id) {
+                appData.infoSheets.splice(i, 1); break;
+              }
+            }
+            saveData();
+            renderInfoList();
+          });
+        }
       });
     });
   });
