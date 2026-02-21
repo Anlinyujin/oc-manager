@@ -4,7 +4,8 @@ var STORAGE_KEY = 'oc_manager_data';
 var appData = {
   classes: [],
   notes: [],
-  tags: { level1: [], level3: [] }
+  tags: { level1: [], level3: [] },
+  infoSheets: []
 };
 var autoSaveTimer = null;
 
@@ -15,6 +16,7 @@ function loadData() {
       var d = JSON.parse(s);
       appData.classes = d.classes || [];
       appData.notes = d.notes || [];
+      appData.infoSheets = d.infoSheets || [];
       if (d.tags) {
         if (d.tags.level1) {
           appData.tags.level1 = d.tags.level1;
@@ -59,6 +61,16 @@ function createNote() {
   return { id: generateId(), title: '', content: '', tags: [], createdAt: Date.now() };
 }
 
+function createInfoSheet() {
+  return {
+    id: generateId(),
+    title: '',
+    groups: [],
+    values: {},
+    createdAt: Date.now()
+  };
+}
+
 function findCharacter(id) {
   for (var i = 0; i < appData.classes.length; i++) {
     var chars = appData.classes[i].characters;
@@ -81,6 +93,13 @@ function findCharLocation(id) {
 function findNote(id) {
   for (var i = 0; i < appData.notes.length; i++) {
     if (appData.notes[i].id === id) return appData.notes[i];
+  }
+  return null;
+}
+
+function findInfoSheet(id) {
+  for (var i = 0; i < appData.infoSheets.length; i++) {
+    if (appData.infoSheets[i].id === id) return appData.infoSheets[i];
   }
   return null;
 }
