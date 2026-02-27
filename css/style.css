@@ -782,6 +782,7 @@ textarea.field-input.large { min-height: 120px; }
 .note-preview-clean h3 { font-size: 15px; margin: 10px 0 4px; font-weight: 700; }
 .note-preview-clean h4 { font-size: 14px; margin: 8px 0 3px; font-weight: 700; }
 .note-preview-clean p { margin: 6px 0; }
+.note-preview-clean p.md-blank-line { margin: 0; height: 0.8em; }
 .note-preview-clean ul, .note-preview-clean ol { padding-left: 20px; margin: 6px 0; }
 .note-preview-clean li { margin: 3px 0; }
 .note-preview-clean li ul, .note-preview-clean li ol { margin: 2px 0; }
