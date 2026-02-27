@@ -251,7 +251,10 @@ function renderMarkdown(text) {
     }
 
     // 空行
-    if (line.trim() === '') { i++; continue; }
+    if (line.trim() === '') {
+      result += '<p class="md-blank-line"></p>\n';
+      i++; continue;
+    }
 
     // 标题
     var headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
